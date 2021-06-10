@@ -70,7 +70,7 @@ let
   - Puis on pose
     - ``t_j = jh\;`` où ``\;j = 0, 1, 2, \ldots, M-1``
     - ``u_j = u(t_j)``
-    - ``f_j = f(t_j)``
+    - ``f_j = f(t_j)\,,`` etc.
   """
 end
 
@@ -193,8 +193,19 @@ Au cas particulier où ``M=6\,,`` on a
 
 """
 
-# ╔═╡ 4728cfab-d857-4890-9b1e-68941224ee11
+# ╔═╡ e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
 
+
+# ╔═╡ 3c99b108-aadd-4b6b-8e04-a351e09d7487
+
+
+# ╔═╡ 6baa7a0c-84ff-4252-a914-efa150e1179c
+
+
+# ╔═╡ 4728cfab-d857-4890-9b1e-68941224ee11
+md"""
+- [`spdigm` (**sparse diagonal matrix**)](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.spdiagm)
+"""
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -204,4 +215,7 @@ Au cas particulier où ``M=6\,,`` on a
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
 # ╟─091202a8-9921-49ba-8877-d5e9c9593356
 # ╟─b9fac562-a00c-489d-91a6-f25ad4348940
-# ╠═4728cfab-d857-4890-9b1e-68941224ee11
+# ╠═e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
+# ╠═3c99b108-aadd-4b6b-8e04-a351e09d7487
+# ╠═6baa7a0c-84ff-4252-a914-efa150e1179c
+# ╟─4728cfab-d857-4890-9b1e-68941224ee11
