@@ -30,6 +30,11 @@ pour tout $\,t \in [0,1]\,.$
 
 """
 
+# ╔═╡ 3fb86eda-11a9-46e0-b4fc-cf9660f5765c
+md"""
+**(?)** How to type the two diff $a$'s in $LaTeX$?
+"""
+
 # ╔═╡ 5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 let
   morceaux = TikzPicture(
@@ -41,6 +46,7 @@ let
     \draw[purple, ultra thick] (\d,-0.2) -- (\d,0.2) node [anchor=south] {$\frac{1}{M-1}$};
     \draw[purple, ultra thick] (2*\d,-0.2) -- (2*\d,0.2) node [anchor=south] {$\frac{2}{M-1}$};
     \draw[purple, ultra thick] (\L/2,-0.2) -- (\L/2,0.2) node [anchor=south] {$\cdots$};
+    %node (\L/2,0.2) [anchor=south] {$\cdots$};
     \draw[purple, ultra thick] (\L,-0.2) -- (\L,0.2) node [anchor=south] {$\frac{M-1}{M-1}$};
     \draw[purple, ultra thick] (\L-\d,-0.2) -- (\L-\d,0.2) node [anchor=south] {$\frac{M-2}{M-1}$};
     """,
@@ -136,7 +142,7 @@ Comme nous savons
   u_{M-1} &= u(1) = 0\,,
 \end{align}
 ```
-le produit matrice-vecteur ci-dessus peut encore se simplifie comme
+le produit matrice-vecteur ci-dessus peut encore se simplifier comme
 ```math
 \underbrace{\begin{pmatrix}
      2 & -1 &  0 &  0 & 0 & \cdots & 0 \\
@@ -193,6 +199,7 @@ Au cas particulier où ``M=6\,,`` on a
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
 # ╟─843498a2-c9c8-11eb-31a4-fb7bd7be2a89
+# ╟─3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 # ╟─5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
 # ╟─091202a8-9921-49ba-8877-d5e9c9593356
