@@ -1,18 +1,25 @@
-function [A,g,xmesh,ucomp] = finitediff1(M,a,c,f)
-% I kind of forget the syntax of Matlab/Octave, but
-% [A,g,xmesh,ucomp] seems to be their way of returning multiple outputs.
+function finitediff1(M, a, c, f)
+  """
+  `a, c, f` are functions whose input is a vector and output is a vector.
+  Accurately speaking, `a` returns two vectors, the first one `a` itself,
+  the second one its derivative.
 
-% `a, c, f` are functions whose input is a vector and output is a vector.
-% Accurately speaking, `a` returns two vectors, the first one `a` itself,
-% the second one its derivative.
-x = linspace(0,1,M);       % This cuts [0, 1] into `M-1` pieces
-h = x(2);                  % x(2) equals 1 / (M-1)
+  """
+  t = 0:1/(M-1):1  # This cuts [0, 1] into `M-1` pieces
+  h = t[2]         # same as h = 1 / (M-1) but save the work to recompute
+  h2inv = 1 / h^2
+  n = M - 2
+  tmesh = t[1:end-1]
+  a0, a1 = a(tmesh)
 
-h2inv = 1/h^2;             % `h` squared inverse
-n = M - 2;
+end
 
-xmesh = x(2:n+1)';         % O'Leary: `tmesh`
-% N.B. length of xmesh equals M-2, which is the correct number for future use.
+
+
+
+
+
+
 
 [a0,ap] = feval(a,xmesh);  % `feval(a, xmesh)` is the same as `a(xmesh)`
 adiff = a0*h2inv;

@@ -196,11 +196,92 @@ Au cas particulier où ``M=6\,,`` on a
 # ╔═╡ e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
 
 
-# ╔═╡ 3c99b108-aadd-4b6b-8e04-a351e09d7487
+# ╔═╡ b529132e-2c1d-4d58-90ca-238fee4f8a93
+md"""
+### CHALLENGE 23.2.
+Le fichier `finitediff1.m` peut se télécharger du site web de l'auteur. Le code Matlab dedans
+est **sans faute**, même s'il est un peu difficile à confirmer sa justesse, surtout pour ceux
+qui n'utilisent pas souvent Matlab/Octave. (Ces notes sont rédigées en 2021 où les langues les
+plus populaires pour faire de la Scientific Computing, ce sont Python et Julia.)
 
+Pour faciliter sa lecture, j'ai ajouté des commentaires dans `finitediff1.m`.
+
+De plus, ce code est d'autant plus difficile parce que, même si l'auteur ne le dit pas,
+on traite l'EDO dans sa complétude, non pas comme dans CHALLENGE 23.1 où on simplifie
+en prenant $M = 6, a(t) = 1, c(t) = 0\,.$
+
+Mais, en fait, ce n'est pas si difficile que ça. L'équation en sa plus grande généralité donne
+cela en différences finies :
+```math
+\newcommand{\aprimeOverh}[1]{\frac{a'_{#1}}{h}}
+\newcommand{\aOverhSquare}[1]{\frac{a_{#1}}{h^2}}
+\newcommand{\ldiag}[1]{\aprimeOverh{#1} - \aOverhSquare{#1}}
+\newcommand{\diag}[1]{-\aprimeOverh{#1} + 2\aOverhSquare{#1} + c_{#1}}
+\newcommand{\udiag}[1]{-\aOverhSquare{#1}}
+
+\begin{align}
+  - a'_{j} \frac{u_{j} - u_{j-1}}{h} - a_{j} \frac{u_{j-1} - 2u_j + u_{j+1}}{h^2} + c_j u_j &= f_j\,, \quad\forall\; j = 1, 2, \ldots, M-2 \\
+
+  &\iff \\
+
+  \left(\ldiag{j}\right) u_{j-1} + \left(\diag{j}\right) u_j + \left(\udiag{j}\right) u_{j+1} &= f_j\,, \quad\forall\; j = 1, 2, \ldots, M-2 \\
+
+  &\iff \\
+\end{align}
+```
+
+```math
+  \begin{pmatrix}
+     \diag{1} & \udiag{1} &  \bullet  &  \bullet  &        &             &             &             \\
+    \ldiag{2} &  \diag{2} & \udiag{1} &  \bullet  &        &             &             &             \\
+     \bullet  & \ldiag{3} &  \diag{3} & \udiag{3} &        &             &             &             \\
+              &           &           &           & \ddots &             &             &             \\
+              &           &           &           &        & \ldiag{M-3} &  \diag{M-3} & \udiag{M-3} \\
+              &           &           &           &        &    \bullet  & \ldiag{M-2}  &  \diag{M-2}
+  \end{pmatrix}
+
+  \begin{pmatrix}
+    u_1 \\
+    u_2 \\
+    \vdots \\
+    u_{M-2}
+  \end{pmatrix} =
+  \begin{pmatrix}
+    f_1 \\
+    f_2 \\
+    \vdots \\
+    f_{M-2}
+  \end{pmatrix}
+```
+
+**Rmq.** J'utilise le `\bullet` (``\,``i.e. ``\bullet\,``) pour représenter $0$ dans la grande matrice ci-dessus.
+
+"""
+
+# ╔═╡ 12fd4e40-5406-40e8-98af-9ba089bf37e7
+md"""
+**(?)** Allez voir comment la fonction `spdiags` est implémentée en Matlab/Octave. 
+C'est un peu curieux que tous les trois diagonales (`input args`) doivent avoir les mêmes longueurs (padded by zeros for sub/sup-diagonl).
+"""
+
+# ╔═╡ 3b5f8e3c-236f-47c4-80ab-63328af079eb
+md"""
+**(?)** Pourquoi parfois `$(HTML("<br>"))` ne fonctionne pas? Que faire?
+"""
+
+# ╔═╡ 3c99b108-aadd-4b6b-8e04-a351e09d7487
+md"""
+#### `finitediff1.jl`
+Ensuite, on va coder `finitediff1.m` en Julia.
+
+En Julia, il n'y a pas de `linspace`. Par contre, on a le remplacement suivant.
+"""
 
 # ╔═╡ 6baa7a0c-84ff-4252-a914-efa150e1179c
-
+let
+  M = 6
+  0:1/(M-1):1
+end
 
 # ╔═╡ 4728cfab-d857-4890-9b1e-68941224ee11
 md"""
@@ -209,13 +290,16 @@ md"""
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
-# ╟─843498a2-c9c8-11eb-31a4-fb7bd7be2a89
+# ╠═843498a2-c9c8-11eb-31a4-fb7bd7be2a89
 # ╟─3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 # ╟─5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
 # ╟─091202a8-9921-49ba-8877-d5e9c9593356
 # ╟─b9fac562-a00c-489d-91a6-f25ad4348940
 # ╠═e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
-# ╠═3c99b108-aadd-4b6b-8e04-a351e09d7487
+# ╟─b529132e-2c1d-4d58-90ca-238fee4f8a93
+# ╟─12fd4e40-5406-40e8-98af-9ba089bf37e7
+# ╟─3b5f8e3c-236f-47c4-80ab-63328af079eb
+# ╟─3c99b108-aadd-4b6b-8e04-a351e09d7487
 # ╠═6baa7a0c-84ff-4252-a914-efa150e1179c
 # ╟─4728cfab-d857-4890-9b1e-68941224ee11
