@@ -12,6 +12,7 @@ begin
   using PlutoUI
   using TikzPictures
   using LaTeXStrings
+  using SparseArrays
 end
 
 # ╔═╡ 843498a2-c9c8-11eb-31a4-fb7bd7be2a89
@@ -233,7 +234,7 @@ cela en différences finies :
 ```math
   \begin{pmatrix}
      \diag{1} & \udiag{1} &  \bullet  &  \bullet  &        &             &             &             \\
-    \ldiag{2} &  \diag{2} & \udiag{1} &  \bullet  &        &             &             &             \\
+    \ldiag{2} &  \diag{2} & \udiag{2} &  \bullet  &        &             &             &             \\
      \bullet  & \ldiag{3} &  \diag{3} & \udiag{3} &        &             &             &             \\
               &           &           &           & \ddots &             &             &             \\
               &           &           &           &        & \ldiag{M-3} &  \diag{M-3} & \udiag{M-3} \\
@@ -283,10 +284,137 @@ let
   0:1/(M-1):1
 end
 
+# ╔═╡ c6da89d8-de5b-4e01-98e4-db8039ecd18d
+xyz = zyx = 123
+
+# ╔═╡ b1745ec9-f4a1-4419-9827-8ca220f6e15c
+zyx
+
 # ╔═╡ 4728cfab-d857-4890-9b1e-68941224ee11
 md"""
 - [`spdigm` (**sparse diagonal matrix**)](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.spdiagm)
 """
+
+# ╔═╡ 06a29505-2618-4425-83f2-faac5611ad56
+
+
+# ╔═╡ 2e8b74ed-85e9-4b39-82e4-59819c71353b
+function finitediff1(M::Number, a::Function, c::Function, f::Function)
+  """
+  `a, c, f` are functions whose input is a vector and output is a vector.
+  Accurately speaking, `a` returns two vectors, the first one `a` itself,
+  the second one its derivative.
+
+
+  TODO:
+  01. Use @view
+
+  """
+  t = 0:1/(M-1):1  # This cuts [0, 1] into `M-1` pieces
+  h = t[2]         # same as h = 1 / (M-1) but save the work to recompute
+  #h2inv = 1 / h^2
+  #n = M - 2
+  tmesh = t[2:end-1]
+  a0_and_a1 = a(tmesh)  # a0: 0th derivative, a1: 1st derivative
+  a0 = @view a0_and_a1[1:end, 1]
+  a1 = @view a0_and_a1[1:end, 2]
+  a1_over_h = a1 ./ h
+  a0_over_h² = a0 ./ h^2
+  c0 = c.(tmesh)
+  #g = f0 = f(tmesh)
+  g = f.(tmesh)
+  diag = -a1_over_h + 2 .* a0_over_h² + c0
+  ldiag = (a1_over_h - a0_over_h²)[2:end]
+  udiag = - @view a0_over_h²[1:end-1]
+  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+  # A * ucomp = g
+  ucomp = A \ g
+end
+
+
+# ╔═╡ 5bc24084-8bb7-4abd-bc4d-4993c77466fd
+(t -> [cos(t), sin(t)])(π/2)
+
+# ╔═╡ c3149d94-4d4d-44e5-948e-19bbb356dcac
+(t -> [cos(t), sin(t)]).(0:π/2:2π)
+
+# ╔═╡ a634ba74-5f9c-404e-9605-398d3ad71df6
+typeof((t -> [cos(t), sin(t)]).(0:π/2:2π))
+
+# ╔═╡ 133a31b0-8ed5-466b-a294-8c6a1eb150e1
+Function
+
+# ╔═╡ 7bc31051-8b01-4451-9464-da72d93ebcbd
+(t -> [cos(t) sin(t)]).(0:π/2:2π)
+
+# ╔═╡ 4d946b97-caf5-4448-b019-9b34c2a6cc52
+typeof((t -> [cos(t) sin(t)]).(0:π/2:2π))
+
+# ╔═╡ 64684d8a-2b23-4891-a349-8c57db37136f
+(t -> [cos.(t) sin.(t)])(0:π/2:2π)  # This is what we are looking for! for `a`
+
+# ╔═╡ b7f67766-dd99-4d43-b2b2-7a8660dd1c74
+(t -> [cos.(t) sin.(t)])(0)  # double-check it works on a single number
+
+# ╔═╡ 56d24204-6c10-4f40-87f3-c0b5a8956ede
+let
+  a0, a1 = (t -> [cos.(t) sin.(t)])(0:π/2:2π)
+  a1
+end
+
+# ╔═╡ e5dcc8dd-2499-4767-bcc2-c27ccd6472e2
+md"""
+**(?)** Is there a way in Julia to do what the above cell tries to do?
+"""
+
+# ╔═╡ fe8efb0d-90bf-4dc3-9fd8-1af6199fa1ab
+size([1 2 3; 4 5 6])
+
+# ╔═╡ 3493c8ee-fc50-4878-9a8b-0781ca28fc39
+let
+  function a(t)
+    [ones(size(t)) zeros(size(t))]
+  end
+  a(3), a([1 2 3; 4 5 6])
+end
+
+# ╔═╡ bb6b8859-c566-4648-9ed4-b0744eb55b0a
+md"""
+Prenons un exemple quelconque pour tester notre implémentation de `finitediff1`.
+Disons,
+```math
+\begin{align}
+  u(t) &= \sin t  \\
+  a(t) &= 1       \\
+  c(t) &= 0\,     \\
+\end{align}
+```
+ce qui entraîne
+```math
+f(t) = \frac{d^2 u}{dt^2} = - \sin t\,.
+```
+"""
+
+# ╔═╡ 3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
+let
+  function a(t)
+    [ones(size(t)) zeros(size(t))]
+  end
+  M = 6
+  c(t) = 0
+  f(t) = -sin(t)
+  # Posons u(t) = sin(t) ⟹  f(t) = -sin(t).
+  # Tous les deux lignes suivantes marchent.
+  finitediff1(M, a, t -> 0, t -> -sin(t))
+  #finitediff1(M, a, c, f)
+end
+
+# ╔═╡ 5f089dfb-2ab6-404b-9f26-501a7b981690
+# Vérifions la solutions ci-dessus
+[sin(t) for t = 1/5:1/5:4/5]
+
+# ╔═╡ b8e5da32-39f1-4505-a05e-68bf375bf0e5
+1/5:1/5:4/5
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -302,4 +430,24 @@ md"""
 # ╟─3b5f8e3c-236f-47c4-80ab-63328af079eb
 # ╟─3c99b108-aadd-4b6b-8e04-a351e09d7487
 # ╠═6baa7a0c-84ff-4252-a914-efa150e1179c
+# ╠═c6da89d8-de5b-4e01-98e4-db8039ecd18d
+# ╠═b1745ec9-f4a1-4419-9827-8ca220f6e15c
 # ╟─4728cfab-d857-4890-9b1e-68941224ee11
+# ╠═06a29505-2618-4425-83f2-faac5611ad56
+# ╠═2e8b74ed-85e9-4b39-82e4-59819c71353b
+# ╠═5bc24084-8bb7-4abd-bc4d-4993c77466fd
+# ╠═c3149d94-4d4d-44e5-948e-19bbb356dcac
+# ╠═a634ba74-5f9c-404e-9605-398d3ad71df6
+# ╠═133a31b0-8ed5-466b-a294-8c6a1eb150e1
+# ╠═7bc31051-8b01-4451-9464-da72d93ebcbd
+# ╠═4d946b97-caf5-4448-b019-9b34c2a6cc52
+# ╠═64684d8a-2b23-4891-a349-8c57db37136f
+# ╠═b7f67766-dd99-4d43-b2b2-7a8660dd1c74
+# ╠═56d24204-6c10-4f40-87f3-c0b5a8956ede
+# ╟─e5dcc8dd-2499-4767-bcc2-c27ccd6472e2
+# ╠═fe8efb0d-90bf-4dc3-9fd8-1af6199fa1ab
+# ╠═3493c8ee-fc50-4878-9a8b-0781ca28fc39
+# ╟─bb6b8859-c566-4648-9ed4-b0744eb55b0a
+# ╠═3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
+# ╠═5f089dfb-2ab6-404b-9f26-501a7b981690
+# ╠═b8e5da32-39f1-4505-a05e-68bf375bf0e5

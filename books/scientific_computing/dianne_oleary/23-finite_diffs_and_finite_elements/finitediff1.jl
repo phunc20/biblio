@@ -1,42 +1,31 @@
-function finitediff1(M, a, c, f)
+function finitediff1(M::Number, a::Function, c::Function, f::Function)
   """
   `a, c, f` are functions whose input is a vector and output is a vector.
   Accurately speaking, `a` returns two vectors, the first one `a` itself,
   the second one its derivative.
 
+
+  TODO:
+  01. Use @view
+
   """
   t = 0:1/(M-1):1  # This cuts [0, 1] into `M-1` pieces
   h = t[2]         # same as h = 1 / (M-1) but save the work to recompute
-  h2inv = 1 / h^2
-  n = M - 2
-  tmesh = t[1:end-1]
-  a0, a1 = a(tmesh)
-
+  #h2inv = 1 / h^2
+  #n = M - 2
+  tmesh = t[2:end-1]
+  a0_and_a1 = a(tmesh)  # a0: 0th derivative, a1: 1st derivative
+  a0 = @view a0_and_a1[1:end, 1]
+  a1 = @view a0_and_a1[1:end, 2]
+  a1_over_h = a1 ./ h
+  a0_over_h² = a0 ./ h^2
+  c0 = c.(tmesh)
+  #g = f0 = f(tmesh)
+  g = f.(tmesh)
+  diag = -a1_over_h + 2*a0_over_h² + c0
+  ldiag = (a1_over_h - a0_over_h²)[2:end]
+  udiag = - @view a0_over_h²[1:end-1]
+  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+  # A * ucomp = g
+  ucomp = A \ g
 end
-
-
-
-
-
-
-
-
-[a0,ap] = feval(a,xmesh);  % `feval(a, xmesh)` is the same as `a(xmesh)`
-adiff = a0*h2inv;
-bdiff = ap/h;
-cdiff = feval(c,xmesh);
-rhs   = feval(f,xmesh);    % `rhs` stands for "right-hand side"
-
-% Principle:
-% ending w/ `diff`:  To be put in the main diagonal
-% ending w/ `diffl`: To be put in the lower diagonal
-% ending w/ `diffu`: To be put in the upper diagonal
-adiffu = [0;adiff(1:n-1)];
-bdiffl = [bdiff(2:n);0];
-adiffl = [adiff(2:n);0];
-% N.B. It seems that Matlab/Octave requires the sub/sup-diagnol vector input
-% be of the same length as the diagonal vector (by padding a correct number of zeros)
-A = spdiags([-adiffl+bdiffl,2*adiff - bdiff + cdiff,-adiffu],-1:1,n,n);
-g = rhs;
-
-ucomp = A \ g;             % `ucomp` means the computed solution `u`
