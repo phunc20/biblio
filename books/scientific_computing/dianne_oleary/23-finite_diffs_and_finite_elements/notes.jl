@@ -391,7 +391,7 @@ Disons,
 ```
 ce qui entraîne
 ```math
-f(t) = \frac{d^2 u}{dt^2} = - \sin t\,.
+f(t) = -\frac{d^2 u}{dt^2} = \sin t\,.
 ```
 """
 
@@ -402,10 +402,10 @@ let
   end
   M = 6
   c(t) = 0
-  f(t) = -sin(t)
+  f(t) = sin(t)
   # Posons u(t) = sin(t) ⟹  f(t) = -sin(t).
   # Tous les deux lignes suivantes marchent.
-  finitediff1(M, a, t -> 0, t -> -sin(t))
+  finitediff1(M, a, t -> 0, t -> sin(t))
   #finitediff1(M, a, c, f)
 end
 
@@ -415,6 +415,37 @@ end
 
 # ╔═╡ b8e5da32-39f1-4505-a05e-68bf375bf0e5
 1/5:1/5:4/5
+
+# ╔═╡ 1d35c2ea-1960-47c9-b6cf-5ecc713f7f52
+md"""
+**(?)** Vous vous rendez compte d'où votre **"bug"** est?
+
+**(R)** Votre solution ``u`` ne satisfait pas les boundary conditions.
+En effet, ``u(t) = \sin t \implies u(0) = 0 \text{ et } u(1) =`` $(sin(1))
+
+Changeons la en
+```math
+u(t) = \sin(\pi t)\,.
+```
+
+Ceci implique
+```math
+f(t) = \pi^2 \sin(\pi t)\,.
+```
+"""
+
+# ╔═╡ 47967b6a-e045-41ec-9c64-8101ee06b5c8
+let
+  function a(t)
+    [ones(size(t)) zeros(size(t))]
+  end
+  M = 6
+  finitediff1(M, a, t -> 0, t -> π^2 * sin(π*t))
+end
+
+# ╔═╡ 01212e15-ef86-4c8d-ab79-46d8db111191
+# Vérifions la solutions ci-dessus
+[sin(π*t) for t = 1/5:1/5:4/5]
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -451,3 +482,6 @@ end
 # ╠═3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
 # ╠═5f089dfb-2ab6-404b-9f26-501a7b981690
 # ╠═b8e5da32-39f1-4505-a05e-68bf375bf0e5
+# ╟─1d35c2ea-1960-47c9-b6cf-5ecc713f7f52
+# ╠═47967b6a-e045-41ec-9c64-8101ee06b5c8
+# ╠═01212e15-ef86-4c8d-ab79-46d8db111191
