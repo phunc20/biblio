@@ -20,7 +20,7 @@ md"""
 Dans ce chapitre, on se concentre sur la résolution d'une EDO qui a forme
 
 ```math
--(a(t)u'(t))' - c(t)u(t) = f(t),\; t \in (0, 1),\; \text{où}
+-(a(t)u'(t))' + c(t)u(t) = f(t),\; t \in (0, 1),\; \text{où}
 ```
 
 les fonction $a, c, f: [0,1] \to \mathbb{R}$ sont connue et que l'on veut
@@ -33,7 +33,7 @@ pour tout $\,t \in [0,1]\,.$
 
 # ╔═╡ 3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 md"""
-**(?)** How to type the two diff $a$'s in $LaTeX$?
+**(?)** How to type the two diff $a$'s in `LaTeX`?
 """
 
 # ╔═╡ 5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
@@ -420,7 +420,7 @@ end
 md"""
 **(?)** Vous vous rendez compte d'où votre **"bug"** est?
 
-**(R)** Votre solution ``u`` ne satisfait pas les boundary conditions.
+**(R)** Votre solution ``u`` ne satisfait pas les _boundary conditions_ (i.e. conditions aux bords).
 En effet, ``u(t) = \sin t \implies u(0) = 0 \text{ et } u(1) =`` $(sin(1))
 
 Changeons la en
@@ -447,9 +447,98 @@ end
 # Vérifions la solutions ci-dessus
 [sin(π*t) for t = 1/5:1/5:4/5]
 
+# ╔═╡ 1fe6e455-b092-4afe-b443-1c4de154d3c8
+
+
+# ╔═╡ 2affebef-e5f4-4973-85ce-6ec1acd9909d
+
+
+# ╔═╡ ef73a872-c40c-4b67-94dc-d80db984cfa8
+md"""
+## The Finite Element Method
+Je ne sais pas pourquoi j'ai rédigé la première partie (sur "_Différence Finie_") en
+français. Maintenant, on va entrer dans une nouvelle page, permettez-moi de choisir
+une autre langue, le vietnamien, ce qui, j'espère, bénéficie un plus grand public.
+
+Phương pháp sắp sữa được giới thiệu sau đây được gọi là **Galerkin method**.
+Đại loại đối với một phương trình ODE hoặc PDE, mình hay nhân nó bằng một hàm, sau đó tích phân.
+Thay vì giải trực tiếp phương trình ban đầu, mình sẽ gải phương trình thứ hai này.
+Lấy ví dụ phương trình ban đầu trong chương này thì là
+```math
+\begin{align}
+  -(a(t)u'(t))' - c(t)u(t) &= f(t),\; t \in (0, 1) \\
+  \int_{0}^{1} (-(a(t)u'(t))' - c(t)u(t))v(t) dt &= \int_{0}^{1} f(t)v(t) dt \\
+  \int_{0}^{1} \left( (a(t)u'(t)) v(t) + c(t)u(t))v(t) \right) dt &= \int_{0}^{1} f(t)v(t) dt\quad (\text{integration by parts}) \\
+\end{align}
+```
+
+Đối với những bạn từng học về
+
+- _théorie des distributions_ (trong tiếng Anh môn này hình như được gọi là generalized function theory.)
+  - Chú ý _distribution_ ở đây là khái niệm về hàm số do ông người Pháp Laurent Schwartz introduced, không phải cái distribution mình hay sử dụng để miêu tả xác suất.
+- Không gian Sobolev với ứng dụng của nó trong PDE
+
+Galerkin method sẽ có vẻ giống kỹ thuật quen thuộc hay được sử dụng ttrong hai lĩnh vực ở trên.
+
+Đối với những bạn đọc muốn tìm hiểu thêm về hai lĩnh vực ở trên, mình giới thiệu mấy cuốn sách sau đây.
+
+- [_Théories des distributions_, Laurent Schwartz](https://archive.org/details/LaurentSchwartzThorieDesDistributionsBook4You1/mode/2up)
+- [_Cours d'analyse: Théorie des distributions et analyse de Fourier_, Jean-Michel Bony](https://www.amazon.com/Cours-danalyse-Th%C3%A9orie-distributions-analyse/dp/2730207759)
+- [_Functional analysis, Sobolev spaces and partial differential equations_, Haïm Brézis](http://www.math.utoronto.ca/almut/Brezis.pdf)
+
+Cái hàm ``v`` với cái giải ``u``, mình sẽ lấy từ/tìm trong không gian ``H_{0}^{1}((0, 1))``. Khi ngữ cảnh rõ rằng, thĩnh thoảng mình cũng bỏ cái khoảng (``I = (0,1)`` ở đây) và viết tắt thành ``H_0^1\,.``
+Nói một cách đơn giản, không gian ``H_{0}^{1}((0,1))`` thu tập những hàm ``w \in L^2((0,1))`` sao cho
+
+- w' cũng nằm ở trong ``L^2((0,1))`` luôn. (``w'`` ở đây với đạo hàm "_weak sense_")
+- ``w(0) = 0`` và ``w(1) = 0\,.``
+
+"""
+
+# ╔═╡ 0fe7d3a9-2166-41bf-9b15-f997ba1171aa
+md"""
+#### Mấy cái này giúp được gì vào việc giải quyết phương trình?
+Việc kế tiếp mình sẽ lấy một không gian ``S_h``, không gian con của ``H_0^1\,,``
+trong đó những hàm từ ``S_h`` có thể tạo nên xấp xỉ tốt với những hàm từ ``H_0^1\,.``
+
+Sau đó, thay vì tìm ``u \in H_0^1`` thoả mãn
+```math
+\int_{0}^{1} \left( (a(t)u'(t)) v(t) + c(t)u(t))v(t) \right) dt = \int_{0}^{1} f(t)v(t) dt \quad \forall\; v \in H_0^1\,,
+```
+mình sẽ tìm ``u_h \in S_h`` thỏa mãn
+```math
+\int_{0}^{1} \left( (a(t)u_{h}'(t)) v_h(t) + c(t)u_h(t))v_h(t) \right) dt = \int_{0}^{1} f(t)v_h(t) dt \quad \forall\; v \in S_h\,.
+```
+
+Nhắc lại (Recall that) mình vẫn giữ cái partition của khoảng ``[0,1]`` như cũ:
+```math
+\begin{align}
+  h &= \frac{1}{M-1} \\
+  t_j &= jh \quad\forall\; j = 0, 1, 2, \ldots, M-1 \\
+  [0, 1] &= [t_0, t_1] \cup [t_1, t_2] \cup \cdots \cup [t_{M-2}, t_{M-1}]\,.
+\end{align}
+```
+
+Một lựa chọn thông thường cho ``S_h`` là tập của các hàm **_piece-wise linear_** và continuous trên partition ``[t_0, t_1] \cup [t_1, t_2] \cup \cdots \cup [t_{M-2}, t_{M-1}]\,.``
+
+Đối với lựa chọn như vậy, tương ứng có một basis đơn giản cho không gian tuyến tính ``S_h``, đó là hàm **_hat functions_** ``\phi_j, \;j=1,2,\ldots,M-2\,`` như sau
+```math
+
+
+
+```
+
+
+
+"""
+
+# ╔═╡ 837ddcf9-3761-4701-aadb-d95dae81fa34
+md"""
+**(?)** _xấp xỉ của_ hay là _xấp xỉ với_?
+"""
+
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
-# ╠═843498a2-c9c8-11eb-31a4-fb7bd7be2a89
+# ╟─843498a2-c9c8-11eb-31a4-fb7bd7be2a89
 # ╟─3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 # ╟─5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
@@ -485,3 +574,8 @@ end
 # ╟─1d35c2ea-1960-47c9-b6cf-5ecc713f7f52
 # ╠═47967b6a-e045-41ec-9c64-8101ee06b5c8
 # ╠═01212e15-ef86-4c8d-ab79-46d8db111191
+# ╠═1fe6e455-b092-4afe-b443-1c4de154d3c8
+# ╠═2affebef-e5f4-4973-85ce-6ec1acd9909d
+# ╟─ef73a872-c40c-4b67-94dc-d80db984cfa8
+# ╠═0fe7d3a9-2166-41bf-9b15-f997ba1171aa
+# ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
