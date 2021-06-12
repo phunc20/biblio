@@ -520,21 +520,74 @@ Nhắc lại (Recall that) mình vẫn giữ cái partition của khoảng ``[0,
 
 Một lựa chọn thông thường cho ``S_h`` là tập của các hàm **_piece-wise linear_** và continuous trên partition ``[t_0, t_1] \cup [t_1, t_2] \cup \cdots \cup [t_{M-2}, t_{M-1}]\,.``
 
-Đối với lựa chọn như vậy, tương ứng có một basis đơn giản cho không gian tuyến tính ``S_h``, đó là hàm **_hat functions_** ``\phi_j, \;j=1,2,\ldots,M-2\,`` như sau
+Tương ứng với lựa chọn ``S_h`` piece-wise linear có một basis đơn giản, đó là hàm **_hat functions_** ``\phi_j, \;j=1,2,\ldots,M-2\,`` như sau
 ```math
-
-
-
+\phi_j(t) = \begin{cases}
+  \frac{t - t_{j-1}}{t_j - t_{j-1}}, \quad &t \in [t_{j-1}, t_j] \\
+  \frac{t - t_{j+1}}{t_j - t_{j+1}}, \quad &t \in [t_j, t_{j+1}] \\
+  \quad 0 &\text{otherwise}
+\end{cases}\quad.
 ```
-
-
-
 """
+
+# ╔═╡ 5c77c1d4-c1c6-4245-a1d8-5de69afb140c
+
 
 # ╔═╡ 837ddcf9-3761-4701-aadb-d95dae81fa34
 md"""
 **(?)** _xấp xỉ của_ hay là _xấp xỉ với_?
 """
+
+# ╔═╡ 175d9b57-20f6-4be6-8c7f-b598681085ce
+begin
+  #function ϕ(M::UInt64, j::UInt64, t::Number)
+  function ϕ(M::Int, j::Int)
+    if M <= 0
+      error("M must be a positive integer")
+    end
+    if j < 1 || j > M - 2
+      error("j must be a positive integer in [1 .. M-2]")
+    end
+    function ϕⱼ(t::Number)
+      h = 1 / (M-1)
+      tⱼ₋₁ = (j-1)*h
+      tⱼ = j*h
+      tⱼ₊₁ = (j+1)*h
+      ## Need or no need of `return` in the following conditions?
+      if t > tⱼ₊₁
+        return 0
+      elseif t >= tⱼ
+        return (tⱼ₊₁ - t) / h
+      elseif t >= tⱼ₋₁
+        return (t - tⱼ₋₁) / h
+      else
+        return 0
+      end
+    end
+    return ϕⱼ
+  end
+end
+
+# ╔═╡ 51c19182-d47f-41dd-b1ca-77b980018d0f
+let
+  M = 6
+  the_ϕs = [ϕ(M, j) for j in 1:M-2]
+  [f.(0:0.1:1) for f in the_ϕs]
+end
+
+# ╔═╡ 5d77273e-8fd5-4789-acc5-61e144e8bc34
+md"""
+**(?)** I doubt that `0:h:1` in Julia is a good replacement for `linspace(0,h,1)` in Octave.
+"""
+
+# ╔═╡ 89eea6e7-6700-4141-af7d-20f1e067f653
+Array(0:1:1)
+
+# ╔═╡ 98bf623c-2b02-4657-9270-b115239a4ec3
+Array(0:2:1)
+
+# ╔═╡ b8d658fe-6bd1-4b8c-aed7-6f30c6557525
+Array(0:0.4:1)
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -577,5 +630,12 @@ md"""
 # ╠═1fe6e455-b092-4afe-b443-1c4de154d3c8
 # ╠═2affebef-e5f4-4973-85ce-6ec1acd9909d
 # ╟─ef73a872-c40c-4b67-94dc-d80db984cfa8
-# ╠═0fe7d3a9-2166-41bf-9b15-f997ba1171aa
+# ╟─0fe7d3a9-2166-41bf-9b15-f997ba1171aa
+# ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
+# ╠═175d9b57-20f6-4be6-8c7f-b598681085ce
+# ╠═51c19182-d47f-41dd-b1ca-77b980018d0f
+# ╟─5d77273e-8fd5-4789-acc5-61e144e8bc34
+# ╠═89eea6e7-6700-4141-af7d-20f1e067f653
+# ╠═98bf623c-2b02-4657-9270-b115239a4ec3
+# ╠═b8d658fe-6bd1-4b8c-aed7-6f30c6557525
