@@ -6,7 +6,8 @@ I find that during the first edit, I tend to
 So I decided to name my Pluto notebooks by `_v01`, `_v02`, etc.
 to denote the version according to chronological order.
 
-
+**Rmk.** `_v` means **version** as well as **verbose**. Maybe there
+will bi `_c` in the future, meaning **concise**.
 
 
 

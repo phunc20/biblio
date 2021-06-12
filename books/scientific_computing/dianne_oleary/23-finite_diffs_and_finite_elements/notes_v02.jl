@@ -310,10 +310,12 @@ function finitediff1(M::Number, a::Function, c::Function, f::Function)
   01. Use @view
 
   """
-  t = 0:1/(M-1):1  # This cuts [0, 1] into `M-1` pieces
-  h = t[2]         # same as h = 1 / (M-1) but save the work to recompute
-  #h2inv = 1 / h^2
-  #n = M - 2
+  t = range(0, 1; length=M)
+  ## This ensures that 
+  ## 1) length(t) equals 10
+  ## 2) t[1] equals 0 and t[end] = 1
+
+  h = t[2]              # same as h = 1 / (M-1) but save the work to recompute
   tmesh = t[2:end-1]
   a0_and_a1 = a(tmesh)  # a0: 0th derivative, a1: 1st derivative
   a0 = @view a0_and_a1[1:end, 1]
@@ -327,7 +329,7 @@ function finitediff1(M::Number, a::Function, c::Function, f::Function)
   ldiag = (a1_over_h - a0_over_h²)[2:end]
   udiag = - @view a0_over_h²[1:end-1]
   A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
-  # A * ucomp = g
+  ## A * ucomp = g
   ucomp = A \ g
 end
 
@@ -549,7 +551,9 @@ begin
       error("j must be a positive integer in [1 .. M-2]")
     end
     function ϕⱼ(t::Number)
-      h = 1 / (M-1)
+      tmesh = range(0, 1; length=M)
+      #h = 1 / (M-1)
+      h = tmesh[2]
       tⱼ₋₁ = (j-1)*h
       tⱼ = j*h
       tⱼ₊₁ = (j+1)*h
@@ -575,32 +579,11 @@ let
   [f.(0:0.1:1) for f in the_ϕs]
 end
 
-# ╔═╡ 5d77273e-8fd5-4789-acc5-61e144e8bc34
-md"""
-**(?)** I doubt that `0:h:1` in Julia is a good replacement for `linspace(0,h,1)` in Octave.
-
-**(R)** `range` seems to be a better candidate. Cf. below. $(HTML("<br>"))
-This a major change. We will stop this notebook here, adopt this change and
-continue on `notes_v02.jl`.
-"""
-
 # ╔═╡ 89eea6e7-6700-4141-af7d-20f1e067f653
-Array(0:1:1)
+
 
 # ╔═╡ 98bf623c-2b02-4657-9270-b115239a4ec3
-Array(0:2:1)
 
-# ╔═╡ b8d658fe-6bd1-4b8c-aed7-6f30c6557525
-Array(0:0.4:1)
-
-# ╔═╡ ab003d37-9ab7-47ae-bfee-71cce768cc79
-range(0, 1; length=10)
-
-# ╔═╡ 629482b5-29e3-4150-b452-70db9f8a8604
-Array(range(0, 1; length=10))
-
-# ╔═╡ 33b3085c-2f44-49c6-81ba-90241d0ff5b5
-length(range(0, 1; length=10))
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -648,10 +631,5 @@ length(range(0, 1; length=10))
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
 # ╠═175d9b57-20f6-4be6-8c7f-b598681085ce
 # ╠═51c19182-d47f-41dd-b1ca-77b980018d0f
-# ╟─5d77273e-8fd5-4789-acc5-61e144e8bc34
 # ╠═89eea6e7-6700-4141-af7d-20f1e067f653
 # ╠═98bf623c-2b02-4657-9270-b115239a4ec3
-# ╠═b8d658fe-6bd1-4b8c-aed7-6f30c6557525
-# ╠═ab003d37-9ab7-47ae-bfee-71cce768cc79
-# ╠═629482b5-29e3-4150-b452-70db9f8a8604
-# ╠═33b3085c-2f44-49c6-81ba-90241d0ff5b5
