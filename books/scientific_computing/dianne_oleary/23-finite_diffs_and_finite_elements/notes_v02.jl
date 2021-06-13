@@ -834,10 +834,102 @@ let
   M = 6
   the_ϕs = ϕs(M)
   ts = range(0,1;length=100)
-  for j in 1:M-2
+  plot(ts, the_ϕs[1].(ts))
+  for j in 2:M-2
     plot!(ts, the_ϕs[j].(ts))
   end
 end
+
+# ╔═╡ fe3e7244-2b53-4185-908f-e156b8f3685f
+md"""
+**(?)** Why nothing is being plotted? Because we cannot plot in a for loop?
+"""
+
+# ╔═╡ 96ed2bf0-197a-409d-9b3c-0c5671e177d7
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  plot(ts, the_ϕs[1].(ts))
+  # for j in 2:M-2
+  #   plot!(ts, the_ϕs[j].(ts))
+  # end
+end
+
+# ╔═╡ 043e9659-9e4e-425d-a048-584c411a8463
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  [plot!(ts, the_ϕs[j].(ts)) for j = 1:M-2]
+end
+
+# ╔═╡ 01a4b14f-bf60-4966-b809-085d23dfae62
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  [plot!(ts, the_ϕs[j].(ts)) for j = 1:M-2]
+  plot!()
+end
+
+# ╔═╡ 71372938-a984-4e9a-ab82-4e33d330d188
+md"""
+**(?)** Note that there are 8 of them, mysterious, no?$(HTML("<br>"))
+**(R)** If you combine the output of a list of four figures and think about what the list comprehension does, the mystery becomes more logic and thus less mysterious.
+"""
+
+# ╔═╡ 160806a4-b5f0-488f-b956-cafbfa923911
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  plot(ts, the_ϕs[1].(ts))
+  for j in 2:M-2
+    plot!(ts, the_ϕs[j].(ts))
+  end
+  plot!()
+end
+
+# ╔═╡ edb2edfb-371f-466c-af3b-1dfbdc844cd0
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  plot(ts, the_ϕs[1].(ts))
+  for j in 2:M-2
+    plot!(ts, the_ϕs[j].(ts))
+  end
+  xaxis!(range(0,1;length=M))
+end
+
+# ╔═╡ 65162d6d-be3a-421b-b04c-8eb8f76d3e02
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  alpha = 0.7
+  lw = 2
+  ts = range(0,1;length=700)
+  plot(ts,
+       the_ϕs[1].(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(0,1),
+       xticks=range(0,1;length=M),
+       aspect_ratio=:equal,
+       label="ϕ1",
+       legend=:topleft,
+       background_color=:black,
+  )
+  for j in 2:M-2
+    plot!(ts, the_ϕs[j].(ts),
+          linewidth=lw,
+          linealpha=alpha,
+          label="ϕ$(j)")
+  end
+  plot!()
+end
+
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -906,3 +998,11 @@ end
 # ╟─f2b9ef7f-35e9-4f41-af53-73f5df7b2b25
 # ╟─800f2f97-5e6b-4dd4-955d-e9ef5662fe60
 # ╠═335e4cfd-52de-4217-a627-8215946bfc1f
+# ╟─fe3e7244-2b53-4185-908f-e156b8f3685f
+# ╠═96ed2bf0-197a-409d-9b3c-0c5671e177d7
+# ╠═043e9659-9e4e-425d-a048-584c411a8463
+# ╠═01a4b14f-bf60-4966-b809-085d23dfae62
+# ╟─71372938-a984-4e9a-ab82-4e33d330d188
+# ╠═160806a4-b5f0-488f-b956-cafbfa923911
+# ╠═edb2edfb-371f-466c-af3b-1dfbdc844cd0
+# ╠═65162d6d-be3a-421b-b04c-8eb8f76d3e02
