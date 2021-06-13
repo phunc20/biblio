@@ -13,6 +13,8 @@ begin
   using TikzPictures
   using LaTeXStrings
   using SparseArrays
+  using Profile
+  using BenchmarkTools
 end
 
 # ╔═╡ 843498a2-c9c8-11eb-31a4-fb7bd7be2a89
@@ -540,8 +542,126 @@ md"""
 **(?)** _xấp xỉ của_ hay là _xấp xỉ với_?
 """
 
-# ╔═╡ 175d9b57-20f6-4be6-8c7f-b598681085ce
+# ╔═╡ 281673a6-cd97-4a48-b559-e8f9182be7f1
+md"""
+**(?)** Nếu mình return một lượt tất cả mỗi ϕⱼ's, không phải sẽ nhanh hơn sao? $(HTML("<br>"))
+**(R)**
+"""
+
+# ╔═╡ 324c78b5-ea94-4c0e-890f-5057bc31ffff
+md"""
+**Rmk.** Notice that the above code has one advantage over its predecessor:
+> The numerical results are closer to the true ``\phi_j``'s.
+"""
+
+# ╔═╡ a697cee4-233a-40a6-a54e-5c8bf3a75b7a
+md"""
+**(?)** Slicing worths using view. A single element accessing uses view as well?$(HTML("<br>"))
+**(R)** Maybe its because of **type diff**, A single element (which is not an array) cannot benefit from the `@view` macro to reduce copying.
+"""
+
+# ╔═╡ 98bf623c-2b02-4657-9270-b115239a4ec3
+let
+  a = range(1,10; length=10)
+  a1 = a[1]
+  a1 = -7
+  a1, a[1]
+end
+
+# ╔═╡ a89a1d5c-57bd-4238-ba12-eb477ae9cbf3
+let
+  a = range(1,10; length=10)
+  a1 = @view a[1]
+  a1 = -7
+  a1, a[1]
+end
+
+# ╔═╡ b85cfb9f-95b1-4c32-a01b-260cd4f945fb
+let
+  a = Array(range(1,10; length=10))
+  b = a[1:3]
+  b[1] = -7.0
+  b[1], a[1]
+end
+
+# ╔═╡ 3c995c70-4eda-45e3-ba1c-70a874ebb8de
+let
+  a = Array(range(1,10; length=10))
+  b = @view a[1:3]
+  b[1] = -7.0
+  b[1], a[1]
+end
+
+# ╔═╡ 0f5116cc-1713-487d-9403-57d97d076649
+let
+  a = Array(range(1,10; length=10))
+  a1 = a[1]
+  a1 = -7
+  a1, a[1]
+end
+
+# ╔═╡ 2cdbfc6d-d12e-43b5-8e73-a5e9751e5b36
+let
+  a = Array(range(1,10; length=10))
+  a1 = @view a[1]
+  a1 = -7
+  a1, a[1]
+end
+
+# ╔═╡ 3385aaa4-6582-4304-8110-844f50542c12
+let
+  a = Array(range(1,10; length=10))
+  a1 = @view a[1:1]
+  a1 = -7
+  a1, a[1]
+end
+
+# ╔═╡ 4ed315c7-6fec-4f61-9595-ae222e569a09
+md"""
+#### Performance measure
+Sử dụng `begin` cho hai cái functions (về hat functions) ở trên, để so sảnh performance.
+
+**Rmk.** Mình có sửa chút hàm `ϕ` ở dưới, để nó output cũng chính xác như `ϕs`. Cái này không phải là vấn đề, cả hai đều có thể rất chính xác.
+"""
+
+# ╔═╡ f06412aa-9aca-4805-b75b-93a19070da32
 begin
+  function ϕ(M::Int, j::Int)
+    if M <= 0
+      error("M must be a positive integer")
+    end
+    if j < 1 || j > M - 2
+      error("j must be a positive integer in [1 .. M-2]")
+    end
+    function ϕⱼ(t::Number)
+      # h = 1 / (M-1)
+      # tⱼ₋₁ = (j-1)*h
+      # tⱼ = j*h
+      # tⱼ₊₁ = (j+1)*h
+
+      tmesh = range(0,1;length=M)
+      h = tmesh[2]
+      tⱼ₋₁ = tmesh[j]
+      tⱼ   = tmesh[j+1]
+      tⱼ₊₁ = tmesh[j+2]
+
+      ## Need or no need of `return` in the following conditions?
+      if t > tⱼ₊₁
+        return 0
+      elseif t >= tⱼ
+        return (tⱼ₊₁ - t) / h
+      elseif t >= tⱼ₋₁
+        return (t - tⱼ₋₁) / h
+      else
+        return 0
+      end
+    end
+    return ϕⱼ
+  end
+end
+
+# ╔═╡ 175d9b57-20f6-4be6-8c7f-b598681085ce
+let
   #function ϕ(M::UInt64, j::UInt64, t::Number)
   function ϕ(M::Int, j::Int)
     if M <= 0
@@ -551,9 +671,7 @@ begin
       error("j must be a positive integer in [1 .. M-2]")
     end
     function ϕⱼ(t::Number)
-      tmesh = range(0, 1; length=M)
-      #h = 1 / (M-1)
-      h = tmesh[2]
+      h = 1 / (M-1)
       tⱼ₋₁ = (j-1)*h
       tⱼ = j*h
       tⱼ₊₁ = (j+1)*h
@@ -570,20 +688,156 @@ begin
     end
     return ϕⱼ
   end
-end
-
-# ╔═╡ 51c19182-d47f-41dd-b1ca-77b980018d0f
-let
   M = 6
   the_ϕs = [ϕ(M, j) for j in 1:M-2]
-  [f.(0:0.1:1) for f in the_ϕs]
+  [f.(range(0, 1; length=M)) for f in the_ϕs]
+end
+
+# ╔═╡ 718d73ee-50ad-46be-905c-57123506af3d
+let
+  # Same code w/o `return` (for testing purposes)
+  function ϕ(M::Int, j::Int)
+    if M <= 0
+      error("M must be a positive integer")
+    end
+    if j < 1 || j > M - 2
+      error("j must be a positive integer in [1 .. M-2]")
+    end
+    function ϕⱼ(t::Number)
+      h = 1 / (M-1)
+      tⱼ₋₁ = (j-1)*h
+      tⱼ = j*h
+      tⱼ₊₁ = (j+1)*h
+      ## Need or no need of `return` in the following conditions?
+      ## No need. But keeping them will make the code easier to read for me.
+      if t > tⱼ₊₁
+        0
+      elseif t >= tⱼ
+        (tⱼ₊₁ - t) / h
+      elseif t >= tⱼ₋₁
+        (t - tⱼ₋₁) / h
+      else
+        0
+      end
+    end
+    return ϕⱼ
+  end
+  M = 6
+  the_ϕs = [ϕ(M, j) for j in 1:M-2]
+  [f.(range(0, 1; length=M)) for f in the_ϕs]
+end
+
+# ╔═╡ 8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
+begin
+  function ϕs(M::Int)
+    if M <= 0
+      error("M must be a positive integer")
+    end
+    tmesh = range(0, 1; length=M)
+    h = tmesh[2]
+    function ϕⱼ(t::Number, j::Int)
+      if j < 1 || j > M - 2
+        error("j must be a positive integer in [1 .. M-2]")
+      end
+      tⱼ₋₁ = tmesh[j]
+      tⱼ   = tmesh[j+1]
+      tⱼ₊₁ = tmesh[j+2]
+      if t > tⱼ₊₁
+        return 0
+      elseif t >= tⱼ
+        return (tⱼ₊₁ - t) / h
+      elseif t >= tⱼ₋₁
+        return (t - tⱼ₋₁) / h
+      else
+        return 0
+      end
+    end
+    return [t::Number -> ϕⱼ(t, j) for j = 1:M-2]
+  end
 end
 
 # ╔═╡ 89eea6e7-6700-4141-af7d-20f1e067f653
+let
+  function ϕs(M::Int)
+    if M <= 0
+      error("M must be a positive integer")
+    end
+    tmesh = range(0, 1; length=M)
+    h = tmesh[2]
+    function ϕⱼ(t::Number, j::Int)
+      if j < 1 || j > M - 2
+        error("j must be a positive integer in [1 .. M-2]")
+      end
+      tⱼ₋₁ = tmesh[j]
+      tⱼ   = tmesh[j+1]
+      tⱼ₊₁ = tmesh[j+2]
+      if t > tⱼ₊₁
+        return 0
+      elseif t >= tⱼ
+        return (tⱼ₊₁ - t) / h
+      elseif t >= tⱼ₋₁
+        return (t - tⱼ₋₁) / h
+      else
+        return 0
+      end
+    end
+    return [t::Number -> ϕⱼ(t, j) for j = 1:M-2]
+  end
+  M = 6
+  the_ϕs = ϕs(M)
+  #methods(the_ϕs[1])
+  #the_ϕs[1](0.5)
+  [ϕ.(range(0, 1; length=M)) for ϕ in the_ϕs]
+end
 
+# ╔═╡ 9a656d11-c782-42ea-8ca3-87be10276533
+@benchmark let
+  M = 6
+  the_ϕs = [ϕ(M, j) for j in 1:M-2]
+  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
+end
 
-# ╔═╡ 98bf623c-2b02-4657-9270-b115239a4ec3
+# ╔═╡ c2c98dbd-32c7-463e-a06f-2c5952c64654
+@benchmark let
+  M = 6
+  the_ϕs = ϕs(M)
+  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
+end
 
+# ╔═╡ 96196040-2d0e-47db-9ed0-776648e1940e
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
+end
+
+# ╔═╡ 83c82c6b-d11a-48d6-854e-5ec1f23d2c0e
+let
+  M = 6
+  the_ϕs = [ϕ(M, j) for j in 1:M-2]
+  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
+end
+
+# ╔═╡ f2b9ef7f-35e9-4f41-af53-73f5df7b2b25
+md"""
+##### Conclusion
+Có vẻ performance của hai methods không khác nhau là mấy.
+"""
+
+# ╔═╡ 800f2f97-5e6b-4dd4-955d-e9ef5662fe60
+md"""
+#### Vẽ hat functions
+"""
+
+# ╔═╡ 335e4cfd-52de-4217-a627-8215946bfc1f
+let
+  M = 6
+  the_ϕs = ϕs(M)
+  ts = range(0,1;length=100)
+  for j in 1:M-2
+    plot!(ts, the_ϕs[j].(ts))
+  end
+end
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -630,6 +884,25 @@ end
 # ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
 # ╠═175d9b57-20f6-4be6-8c7f-b598681085ce
-# ╠═51c19182-d47f-41dd-b1ca-77b980018d0f
+# ╠═718d73ee-50ad-46be-905c-57123506af3d
+# ╟─281673a6-cd97-4a48-b559-e8f9182be7f1
 # ╠═89eea6e7-6700-4141-af7d-20f1e067f653
+# ╟─324c78b5-ea94-4c0e-890f-5057bc31ffff
+# ╟─a697cee4-233a-40a6-a54e-5c8bf3a75b7a
 # ╠═98bf623c-2b02-4657-9270-b115239a4ec3
+# ╠═a89a1d5c-57bd-4238-ba12-eb477ae9cbf3
+# ╠═b85cfb9f-95b1-4c32-a01b-260cd4f945fb
+# ╠═3c995c70-4eda-45e3-ba1c-70a874ebb8de
+# ╠═0f5116cc-1713-487d-9403-57d97d076649
+# ╠═2cdbfc6d-d12e-43b5-8e73-a5e9751e5b36
+# ╠═3385aaa4-6582-4304-8110-844f50542c12
+# ╟─4ed315c7-6fec-4f61-9595-ae222e569a09
+# ╟─f06412aa-9aca-4805-b75b-93a19070da32
+# ╟─8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
+# ╠═9a656d11-c782-42ea-8ca3-87be10276533
+# ╠═c2c98dbd-32c7-463e-a06f-2c5952c64654
+# ╠═96196040-2d0e-47db-9ed0-776648e1940e
+# ╠═83c82c6b-d11a-48d6-854e-5ec1f23d2c0e
+# ╟─f2b9ef7f-35e9-4f41-af53-73f5df7b2b25
+# ╟─800f2f97-5e6b-4dd4-955d-e9ef5662fe60
+# ╠═335e4cfd-52de-4217-a627-8215946bfc1f
