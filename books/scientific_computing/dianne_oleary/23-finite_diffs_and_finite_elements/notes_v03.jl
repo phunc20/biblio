@@ -469,10 +469,12 @@ Phương pháp sắp sữa được giới thiệu sau đây được gọi là 
 Thay vì giải trực tiếp phương trình ban đầu, mình sẽ gải phương trình thứ hai này.
 Lấy ví dụ phương trình ban đầu trong chương này thì là
 ```math
+\newcommand{\afAlign}[1]{\int_{0}^{1} \left( (a(t)u_{#1}'(t)) v_{#1}'(t) + c(t)u_{#1}(t))v_{#1}(t) \right) dt &= \int_{0}^{1} f(t)v_{#1}(t) dt}
+
 \begin{align}
   -(a(t)u'(t))' - c(t)u(t) &= f(t),\; t \in (0, 1) \\
   \int_{0}^{1} (-(a(t)u'(t))' - c(t)u(t))v(t) dt &= \int_{0}^{1} f(t)v(t) dt \\
-  \int_{0}^{1} \left( (a(t)u'(t)) v'(t) + c(t)u(t))v(t) \right) dt &= \int_{0}^{1} f(t)v(t) dt\quad (\text{integration by parts}) \\
+  \afAlign{} \quad (\text{integration by parts})
 \end{align}
 ```
 
@@ -506,16 +508,14 @@ trong đó những hàm từ ``S_h`` có thể tạo nên xấp xỉ tốt với
 
 Sau đó, thay vì tìm ``u \in H_0^1`` thoả mãn
 ```math
-\newcommand{\af}[1]{\int_{0}^{1} \left( (a(t)u_{#1}'(t)) v_{#1}'(t) + c(t)u_{#1}(t))v_{#1}(t) \right) dt = \int_{0}^{1} f(t)v_{#1}(t) dt}
+\newcommand{\auv}[1]{\int_{0}^{1} \left( (a(t)u_{#1}'(t)) v_{#1}'(t) + c(t)u_{#1}(t))v_{#1}(t) \right) dt}
+\newcommand{\fv}[1]{\int_{0}^{1} f(t)v_{#1}(t) dt}
 
-%\int_{0}^{1} \left( (a(t)u'(t)) v'(t) + c(t)u(t))v(t) \right) dt = \int_{0}^{1} f(t)v(t) dt \quad \forall\; v \in H_0^1\,,
-
-\af{} \quad \forall\; v \in H_0^1\,,
+\auv{} = \fv{} \quad \forall\; v \in H_0^1\,,
 ```
 mình sẽ tìm ``u_h \in S_h`` thỏa mãn
 ```math
-%\int_{0}^{1} \left( (a(t)u_{h}'(t)) v_h'(t) + c(t)u_h(t))v_h(t) \right) dt = \int_{0}^{1} f(t)v_h(t) dt \quad \forall\; v \in S_h\,.
-\af{h}  \quad \forall\; v \in S_h\,.
+\auv{h} = \fv{h}  \quad \forall\; v \in S_h\,.
 ```
 
 Nhắc lại (Recall that) mình vẫn giữ cái partition của khoảng ``[0,1]`` như cũ:
@@ -545,88 +545,6 @@ Tương ứng với lựa chọn ``S_h`` piece-wise linear có một basis đơn
 # ╔═╡ 837ddcf9-3761-4701-aadb-d95dae81fa34
 md"""
 **(?)** _xấp xỉ của_ hay là _xấp xỉ với_?
-"""
-
-# ╔═╡ 281673a6-cd97-4a48-b559-e8f9182be7f1
-md"""
-**(?)** Nếu mình return một lượt tất cả mỗi ϕⱼ's, không phải sẽ nhanh hơn sao? $(HTML("<br>"))
-**(R)**
-"""
-
-# ╔═╡ 324c78b5-ea94-4c0e-890f-5057bc31ffff
-md"""
-**Rmk.** Notice that the above code has one advantage over its predecessor:
-> The numerical results are closer to the true ``\phi_j``'s.
-"""
-
-# ╔═╡ a697cee4-233a-40a6-a54e-5c8bf3a75b7a
-md"""
-**(?)** Slicing worths using view. A single element accessing uses view as well?$(HTML("<br>"))
-**(R)** Maybe its because of **type diff**, A single element (which is not an array) cannot benefit from the `@view` macro to reduce copying.
-"""
-
-# ╔═╡ 98bf623c-2b02-4657-9270-b115239a4ec3
-let
-  a = range(1,10; length=10)
-  a1 = a[1]
-  a1 = -7
-  a1, a[1]
-end
-
-# ╔═╡ a89a1d5c-57bd-4238-ba12-eb477ae9cbf3
-let
-  a = range(1,10; length=10)
-  a1 = @view a[1]
-  a1 = -7
-  a1, a[1]
-end
-
-# ╔═╡ b85cfb9f-95b1-4c32-a01b-260cd4f945fb
-let
-  a = Array(range(1,10; length=10))
-  b = a[1:3]
-  b[1] = -7.0
-  b[1], a[1]
-end
-
-# ╔═╡ 3c995c70-4eda-45e3-ba1c-70a874ebb8de
-let
-  a = Array(range(1,10; length=10))
-  b = @view a[1:3]
-  b[1] = -7.0
-  b[1], a[1]
-end
-
-# ╔═╡ 0f5116cc-1713-487d-9403-57d97d076649
-let
-  a = Array(range(1,10; length=10))
-  a1 = a[1]
-  a1 = -7
-  a1, a[1]
-end
-
-# ╔═╡ 2cdbfc6d-d12e-43b5-8e73-a5e9751e5b36
-let
-  a = Array(range(1,10; length=10))
-  a1 = @view a[1]
-  a1 = -7
-  a1, a[1]
-end
-
-# ╔═╡ 3385aaa4-6582-4304-8110-844f50542c12
-let
-  a = Array(range(1,10; length=10))
-  a1 = @view a[1:1]
-  a1 = -7
-  a1, a[1]
-end
-
-# ╔═╡ 4ed315c7-6fec-4f61-9595-ae222e569a09
-md"""
-#### Performance measure
-Sử dụng `begin` cho hai cái functions (về hat functions) ở trên, để so sảnh performance.
-
-**Rmk.** Mình có sửa chút hàm `ϕ` ở dưới, để nó output cũng chính xác như `ϕs`. Cái này không phải là vấn đề, cả hai đều có thể rất chính xác.
 """
 
 # ╔═╡ f06412aa-9aca-4805-b75b-93a19070da32
@@ -665,73 +583,6 @@ begin
   end
 end
 
-# ╔═╡ 175d9b57-20f6-4be6-8c7f-b598681085ce
-let
-  #function ϕ(M::UInt64, j::UInt64, t::Number)
-  function ϕ(M::Int, j::Int)
-    if M <= 0
-      error("M must be a positive integer")
-    end
-    if j < 1 || j > M - 2
-      error("j must be a positive integer in [1 .. M-2]")
-    end
-    function ϕⱼ(t::Number)
-      h = 1 / (M-1)
-      tⱼ₋₁ = (j-1)*h
-      tⱼ = j*h
-      tⱼ₊₁ = (j+1)*h
-      ## Need or no need of `return` in the following conditions?
-      if t > tⱼ₊₁
-        return 0
-      elseif t >= tⱼ
-        return (tⱼ₊₁ - t) / h
-      elseif t >= tⱼ₋₁
-        return (t - tⱼ₋₁) / h
-      else
-        return 0
-      end
-    end
-    return ϕⱼ
-  end
-  M = 6
-  the_ϕs = [ϕ(M, j) for j in 1:M-2]
-  [f.(range(0, 1; length=M)) for f in the_ϕs]
-end
-
-# ╔═╡ 718d73ee-50ad-46be-905c-57123506af3d
-let
-  # Same code w/o `return` (for testing purposes)
-  function ϕ(M::Int, j::Int)
-    if M <= 0
-      error("M must be a positive integer")
-    end
-    if j < 1 || j > M - 2
-      error("j must be a positive integer in [1 .. M-2]")
-    end
-    function ϕⱼ(t::Number)
-      h = 1 / (M-1)
-      tⱼ₋₁ = (j-1)*h
-      tⱼ = j*h
-      tⱼ₊₁ = (j+1)*h
-      ## Need or no need of `return` in the following conditions?
-      ## No need. But keeping them will make the code easier to read for me.
-      if t > tⱼ₊₁
-        0
-      elseif t >= tⱼ
-        (tⱼ₊₁ - t) / h
-      elseif t >= tⱼ₋₁
-        (t - tⱼ₋₁) / h
-      else
-        0
-      end
-    end
-    return ϕⱼ
-  end
-  M = 6
-  the_ϕs = [ϕ(M, j) for j in 1:M-2]
-  [f.(range(0, 1; length=M)) for f in the_ϕs]
-end
-
 # ╔═╡ 8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
 begin
   function ϕs(M::Int)
@@ -761,152 +612,10 @@ begin
   end
 end
 
-# ╔═╡ 89eea6e7-6700-4141-af7d-20f1e067f653
-let
-  function ϕs(M::Int)
-    if M <= 0
-      error("M must be a positive integer")
-    end
-    tmesh = range(0, 1; length=M)
-    h = tmesh[2]
-    function ϕⱼ(t::Number, j::Int)
-      if j < 1 || j > M - 2
-        error("j must be a positive integer in [1 .. M-2]")
-      end
-      tⱼ₋₁ = tmesh[j]
-      tⱼ   = tmesh[j+1]
-      tⱼ₊₁ = tmesh[j+2]
-      if t > tⱼ₊₁
-        return 0
-      elseif t >= tⱼ
-        return (tⱼ₊₁ - t) / h
-      elseif t >= tⱼ₋₁
-        return (t - tⱼ₋₁) / h
-      else
-        return 0
-      end
-    end
-    return [t::Number -> ϕⱼ(t, j) for j = 1:M-2]
-  end
-  M = 6
-  the_ϕs = ϕs(M)
-  #methods(the_ϕs[1])
-  #the_ϕs[1](0.5)
-  [ϕ.(range(0, 1; length=M)) for ϕ in the_ϕs]
-end
-
-# ╔═╡ 9a656d11-c782-42ea-8ca3-87be10276533
-@benchmark let
-  M = 6
-  the_ϕs = [ϕ(M, j) for j in 1:M-2]
-  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
-end
-
-# ╔═╡ c2c98dbd-32c7-463e-a06f-2c5952c64654
-@benchmark let
-  M = 6
-  the_ϕs = ϕs(M)
-  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
-end
-
-# ╔═╡ 96196040-2d0e-47db-9ed0-776648e1940e
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
-end
-
-# ╔═╡ 83c82c6b-d11a-48d6-854e-5ec1f23d2c0e
-let
-  M = 6
-  the_ϕs = [ϕ(M, j) for j in 1:M-2]
-  [phi.(range(0, 1; length=M)) for phi in the_ϕs]
-end
-
-# ╔═╡ f2b9ef7f-35e9-4f41-af53-73f5df7b2b25
-md"""
-##### Conclusion
-Có vẻ performance của hai methods không khác nhau là mấy.
-"""
-
 # ╔═╡ 800f2f97-5e6b-4dd4-955d-e9ef5662fe60
 md"""
 #### Vẽ hat functions
 """
-
-# ╔═╡ 335e4cfd-52de-4217-a627-8215946bfc1f
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  plot(ts, the_ϕs[1].(ts))
-  for j in 2:M-2
-    plot!(ts, the_ϕs[j].(ts))
-  end
-end
-
-# ╔═╡ fe3e7244-2b53-4185-908f-e156b8f3685f
-md"""
-**(?)** Why nothing is being plotted? Because we cannot plot in a for loop?
-"""
-
-# ╔═╡ 96ed2bf0-197a-409d-9b3c-0c5671e177d7
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  plot(ts, the_ϕs[1].(ts))
-  # for j in 2:M-2
-  #   plot!(ts, the_ϕs[j].(ts))
-  # end
-end
-
-# ╔═╡ 043e9659-9e4e-425d-a048-584c411a8463
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  [plot!(ts, the_ϕs[j].(ts)) for j = 1:M-2]
-end
-
-# ╔═╡ 01a4b14f-bf60-4966-b809-085d23dfae62
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  [plot!(ts, the_ϕs[j].(ts)) for j = 1:M-2]
-  plot!()
-end
-
-# ╔═╡ 71372938-a984-4e9a-ab82-4e33d330d188
-md"""
-**(?)** Note that there are 8 of them, mysterious, no?$(HTML("<br>"))
-**(R)** If you combine the output of a list of four figures and think about what the list comprehension does, the mystery becomes more logic and thus less mysterious.
-"""
-
-# ╔═╡ 160806a4-b5f0-488f-b956-cafbfa923911
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  plot(ts, the_ϕs[1].(ts))
-  for j in 2:M-2
-    plot!(ts, the_ϕs[j].(ts))
-  end
-  plot!()
-end
-
-# ╔═╡ edb2edfb-371f-466c-af3b-1dfbdc844cd0
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  ts = range(0,1;length=100)
-  plot(ts, the_ϕs[1].(ts))
-  for j in 2:M-2
-    plot!(ts, the_ϕs[j].(ts))
-  end
-  xaxis!(range(0,1;length=M))
-end
 
 # ╔═╡ 65162d6d-be3a-421b-b04c-8eb8f76d3e02
 let
@@ -919,12 +628,14 @@ let
        the_ϕs[1].(ts),
        linealpha=alpha,
        linewidth=lw,
-       xlim=(0,1),
+       xlim=(0,1.1),
        xticks=range(0,1;length=M),
+       yticks=range(0,1;length=M),
        aspect_ratio=:equal,
        label="ϕ1",
        legend=:topleft,
        background_color=:black,
+       title="M = $M",
   )
   for j in 2:M-2
     plot!(ts, the_ϕs[j].(ts),
@@ -936,11 +647,64 @@ let
 end
 
 
-# ╔═╡ 3a1da698-7364-41d5-a302-5e99f5005514
+# ╔═╡ 4e82b334-308b-4f56-b25e-adcc498a4673
+let
+  M = 5
+  #the_ϕs = [ϕ(M, j) for j in 1:M-2]
+  alpha = 0.7
+  lw = 2
+  ts = range(0,1;length=700)
+  plot(ts,
+       ϕ(M,1).(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(0,1.1),
+       xticks=range(0,1;length=M),
+       yticks=range(0,1;length=M),
+       aspect_ratio=:equal,
+       label="ϕ1",
+       legend=:topleft,
+       background_color=:black,
+       title="M = $M",
+  )
+  for j in 2:M-2
+    plot!(ts,
+          ϕ(M,j).(ts),
+          linewidth=lw,
+          linealpha=alpha,
+          label="ϕ$(j)")
+  end
+  plot!()
+end
+
+# ╔═╡ 48d3dee7-5a02-4fc4-bdc3-057d61c2c825
 md"""
-### Shift to `notes_v03.jl`
-It's becoming messy again; let's shift to `v_03` and make it cleaner.
+Nếu mình định nghĩa
+```math
+\begin{align}
+  \mathrm{a}(u, v) &= \auv{} \\
+  (f, v) &= \fv{}
+\end{align}
+```
+thì solution ``u`` thoải mãn
+```math
+\mathrm{a}(u,v) = (f,v) \quad\forall\; v \in H_0^1\,.
+```
+
+Hơn nữa,
+
+- ``\mathrm{a}(\cdot, \cdot)`` là một **_bilinear form_**
+- và ``(f, \cdot)`` một **_linear form_**.
 """
+
+# ╔═╡ fbcd6e7b-5b17-41b2-973e-d575d506cb2c
+
+
+# ╔═╡ 26c20232-6353-4439-87a5-e7ccee13a63c
+
+
+# ╔═╡ 699892d7-19be-4522-b961-af97bf7f4cc4
+
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -986,35 +750,12 @@ It's becoming messy again; let's shift to `v_03` and make it cleaner.
 # ╟─0fe7d3a9-2166-41bf-9b15-f997ba1171aa
 # ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
-# ╠═175d9b57-20f6-4be6-8c7f-b598681085ce
-# ╠═718d73ee-50ad-46be-905c-57123506af3d
-# ╟─281673a6-cd97-4a48-b559-e8f9182be7f1
-# ╠═89eea6e7-6700-4141-af7d-20f1e067f653
-# ╟─324c78b5-ea94-4c0e-890f-5057bc31ffff
-# ╟─a697cee4-233a-40a6-a54e-5c8bf3a75b7a
-# ╠═98bf623c-2b02-4657-9270-b115239a4ec3
-# ╠═a89a1d5c-57bd-4238-ba12-eb477ae9cbf3
-# ╠═b85cfb9f-95b1-4c32-a01b-260cd4f945fb
-# ╠═3c995c70-4eda-45e3-ba1c-70a874ebb8de
-# ╠═0f5116cc-1713-487d-9403-57d97d076649
-# ╠═2cdbfc6d-d12e-43b5-8e73-a5e9751e5b36
-# ╠═3385aaa4-6582-4304-8110-844f50542c12
-# ╟─4ed315c7-6fec-4f61-9595-ae222e569a09
 # ╟─f06412aa-9aca-4805-b75b-93a19070da32
 # ╟─8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
-# ╠═9a656d11-c782-42ea-8ca3-87be10276533
-# ╠═c2c98dbd-32c7-463e-a06f-2c5952c64654
-# ╠═96196040-2d0e-47db-9ed0-776648e1940e
-# ╠═83c82c6b-d11a-48d6-854e-5ec1f23d2c0e
-# ╟─f2b9ef7f-35e9-4f41-af53-73f5df7b2b25
 # ╟─800f2f97-5e6b-4dd4-955d-e9ef5662fe60
-# ╠═335e4cfd-52de-4217-a627-8215946bfc1f
-# ╟─fe3e7244-2b53-4185-908f-e156b8f3685f
-# ╠═96ed2bf0-197a-409d-9b3c-0c5671e177d7
-# ╠═043e9659-9e4e-425d-a048-584c411a8463
-# ╠═01a4b14f-bf60-4966-b809-085d23dfae62
-# ╟─71372938-a984-4e9a-ab82-4e33d330d188
-# ╠═160806a4-b5f0-488f-b956-cafbfa923911
-# ╠═edb2edfb-371f-466c-af3b-1dfbdc844cd0
-# ╠═65162d6d-be3a-421b-b04c-8eb8f76d3e02
-# ╟─3a1da698-7364-41d5-a302-5e99f5005514
+# ╟─65162d6d-be3a-421b-b04c-8eb8f76d3e02
+# ╟─4e82b334-308b-4f56-b25e-adcc498a4673
+# ╟─48d3dee7-5a02-4fc4-bdc3-057d61c2c825
+# ╠═fbcd6e7b-5b17-41b2-973e-d575d506cb2c
+# ╠═26c20232-6353-4439-87a5-e7ccee13a63c
+# ╠═699892d7-19be-4522-b961-af97bf7f4cc4
