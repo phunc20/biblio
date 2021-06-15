@@ -35,7 +35,10 @@ pour tout $\,t \in [0,1]\,.$
 
 # ╔═╡ 3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 md"""
-**(?)** How to type the two diff $a$'s in `LaTeX`?
+**(?)** How to type the two diff $a$'s in `LaTeX`?$(HTML("<br>"))
+**(R)**
+- `\mathrm{a}`
+- `a`
 """
 
 # ╔═╡ 5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
@@ -508,7 +511,7 @@ trong đó những hàm từ ``S_h`` có thể tạo nên xấp xỉ tốt với
 
 Sau đó, thay vì tìm ``u \in H_0^1`` thoả mãn
 ```math
-\newcommand{\auv}[1]{\int_{0}^{1} \left( (a(t)u_{#1}'(t)) v_{#1}'(t) + c(t)u_{#1}(t))v_{#1}(t) \right) dt}
+\newcommand{\auv}[1]{\int_{0}^{1} \left( a(t)u_{#1}'(t) v_{#1}'(t) + c(t)u_{#1}(t)v_{#1}(t) \right) dt}
 \newcommand{\fv}[1]{\int_{0}^{1} f(t)v_{#1}(t) dt}
 
 \auv{} = \fv{} \quad \forall\; v \in H_0^1\,,
@@ -686,7 +689,7 @@ Nếu mình định nghĩa
   (f, v) &= \fv{}
 \end{align}
 ```
-thì solution ``u`` thoải mãn
+thì solution ``u`` thoả mãn
 ```math
 \mathrm{a}(u,v) = (f,v) \quad\forall\; v \in H_0^1\,.
 ```
@@ -698,12 +701,171 @@ Hơn nữa,
 """
 
 # ╔═╡ fbcd6e7b-5b17-41b2-973e-d575d506cb2c
+md"""
+### CHALLENGE 23.4.
+- (a) Mình sẽ đi tìm ``u_h \in S_h`` sao cho
+  ```math
+  \mathrm{a}(u_h, v_h) = (f, v_h) \quad\forall\; v_h \in S_h\,.
+  ```
+- (b) Từ những thảo luận này hãy suy luận ra một phương trình ``Au = g`` tương từ với finite difference ở đầu chương cho finite element ở đây. Rồi lặp lại những ví dụ mình từng làm và so sảnh kết quả của hai phương pháp (finite difference và finite element).
+"""
 
 
 # ╔═╡ 26c20232-6353-4439-87a5-e7ccee13a63c
+md"""
+Bởi vì ``a(\cdot, \cdot)`` và ``(f, \cdot)`` là bilinear và linear và bởi vì, theo định nghĩa,
+``S_h = \text{span}\left(\{\phi_j \,|\, j = 1, 2, \ldots, M-2\}\right)``, một khi chúng ta tìm được ``u_h \in S_h`` sao cho
+```math
+\mathrm{a}(u_h, \phi_j) = (f, \phi_j) \quad\forall\; j=1,2,\ldots, M-2 \,,
+```
+thì chúng ta sẽ có
+```math
+  \mathrm{a}(u_h, v_h) = (f, v_h) \quad\forall\; v_h \in S_h
+```
+liền.
 
+Vì ``u_h \in S_h``, mình có thể viết như sau
+```math
+u_h = \sum_{j=1}^{M-2} u_j \phi_j\,,
+```
+trong đó
+
+- ``u_j \in \mathbb{R}`` là hằng số (chưa được xác định giả trị)
+- Ký hiệu ``u_j`` ở đây consistent với cùng một ký hiệu ``u_j := u(t_j)`` được sử dụng lúc trước khi nói về finite difference
+  - Thật vậy, ``\left( \sum_{k=1}^{M-2} u_k \phi_k \right)(t_j) = u_j \quad\forall\; j = 1, 2, \ldots, M-2``
+"""
 
 # ╔═╡ 699892d7-19be-4522-b961-af97bf7f4cc4
+md"""
+Ok, giờ chúng ta thay
+```math
+u_h = \sum_{k=1}^{M-2} u_k \phi_k
+```
+vào trong
+```math
+\mathrm{a}(u_h, \phi_j) = (f, \phi_j) \quad\forall\; j = 1, \ldots, M-2
+```
+và xem những hằng số ``u_1, u_2, \ldots, u_{M-2}`` nên thoả mãn điều kiện như thế nào:
+
+```math
+\begin{align}
+  \mathrm{a}\left(\sum_{k=1}^{M-2} u_k \phi_k,\; \phi_j\right) &= (f, \phi_j) \quad\forall\; j = 1,\ldots,M-2 \\
+  \sum_{k=1}^{M-2} u_k\; \mathrm{a}\left(\phi_k, \phi_j\right) &= (f, \phi_j) \quad\forall\; j = 1,\ldots,M-2 \\
+\end{align}
+```
+```math
+\newcommand{\aphis}[2]{\mathrm{a}\left(\phi_{#1}, \phi_{#2}\right)}
+\newcommand{\fphi}[1]{\left(f, \phi_{#1}\right)}
+
+\begin{pmatrix}
+  \aphis{1}{1}   & \aphis{2}{1}   & \cdots & \aphis{M-2}{1} \\
+  \aphis{1}{2}   & \aphis{2}{2}   & \cdots & \aphis{M-2}{2} \\
+  \vdots         & \vdots         & \ddots & \vdots         \\
+  \aphis{1}{M-2} & \aphis{2}{M-2} & \cdots & \aphis{M-2}{M-2} \\
+\end{pmatrix}
+\begin{pmatrix}
+  u_{1} \\
+  u_{2} \\
+  \vdots \\
+  u_{M-2} \\
+\end{pmatrix} =
+\begin{pmatrix}
+  \fphi{1} \\
+  \fphi{2} \\
+  \vdots \\
+  \fphi{M-2} \\
+\end{pmatrix}
+```
+Cái phương trình cuối cùng chính là điều khiện mà ``u_1, \ldots, u_{M-2}`` nên thỏa mãn, i.e. ``\left( u_1, \ldots, u_{M-2} \right)`` nên là giải của ``Au = g\,.``
+"""
+
+# ╔═╡ c985f320-ebb3-42c8-a195-a0e08befcd0a
+md"""
+Với ví dụ ``M=6, a(t)=1, c(t)=0``, chúng ta có
+```math
+\aphis{k}{j} = \int_0^1 \phi_k'(t) \phi_j'(t) dt =
+\begin{cases}
+  \frac{2}{h}    &\text{nếu}\;\;   k = j                   \\
+  -\frac{1}{h}   &\text{nếu}\;\;   \lvert k -j \rvert = 1  \\
+  0              &\text{otherwise}
+\end{cases}\quad,
+```
+bởi vì
+```math
+\phi_j'(t) =
+\begin{cases}
+  \frac{1}{h},  &t \in [t_{j-1}, t_j] \\
+  -\frac{1}{h}, &t \in [t_{j-1}, t_j] \\
+  0             &\text{otherwise}
+\end{cases}\quad.
+```
+Điền cái kết quả này vô ma trận ``A`` ở trên, mình sẽ được một phương trình rất giống hồi mình ở finite difference:
+```math
+\begin{pmatrix}
+     2 & -1 &  0 &  0 & 0 & \cdots & 0 \\
+    -1 &  2 & -1 &  0 & 0 & \cdots & 0 \\
+     0 & -1 &  2 & -1 & 0 & \cdots & 0 \\
+    \vdots &&   & \ddots  &   &    & \vdots \\
+     0  & \cdots& & 0 & -1 &  2 & -1    \\
+     0  & \cdots& & 0 &  0 & -1 &  2    \\
+\end{pmatrix}
+\begin{pmatrix}
+  u_{1} \\
+  u_{2} \\
+  \vdots \\
+  u_{M-2} \\
+\end{pmatrix} = h
+\begin{pmatrix}
+  \fphi{1} \\
+  \fphi{2} \\
+  \vdots \\
+  \fphi{M-2} \\
+\end{pmatrix}\,.
+```
+Để ý rằng sự thay đổ nằm ở bên tay phải của phương trình
+
+- ``h^2 f_j``
+- ``h\, (f, \phi_j)``
+
+**Rmk.** Xét vào khía cảnh dimension, hai quantity ở trên có cùng một dimension.
+
+On remarque que cela a forme ``Au = g\,,`` où ``A`` est une matrice **tridiagonale**.
+
+Với ``M=6\,,`` chúng ta có
+
+```math
+\begin{pmatrix}
+     2 & -1 &  0 &  0 \\
+    -1 &  2 & -1 &  0 \\
+     0 & -1 &  2 & -1 \\
+     0 &  0 & -1 &  2 \\
+\end{pmatrix}
+\begin{pmatrix}
+  u_{1} \\
+  u_{2} \\
+  u_{3} \\
+  u_{4} \\
+\end{pmatrix} = \frac{1}{5}
+\begin{pmatrix}
+  \fphi{1} \\
+  \fphi{2} \\
+  \fphi{3} \\
+  \fphi{4} \\
+\end{pmatrix}\,.
+```
+
+
+
+"""
+
+
+# ╔═╡ 5e7ab74c-1473-4c8e-9d93-13dd9c108af2
+
+
+# ╔═╡ 37a597d5-f7f4-475c-bcf7-bfe42a2b1155
+
+
+# ╔═╡ 5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
 
 
 # ╔═╡ Cell order:
@@ -713,7 +875,7 @@ Hơn nữa,
 # ╟─5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
 # ╟─091202a8-9921-49ba-8877-d5e9c9593356
-# ╟─b9fac562-a00c-489d-91a6-f25ad4348940
+# ╠═b9fac562-a00c-489d-91a6-f25ad4348940
 # ╠═e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
 # ╟─b529132e-2c1d-4d58-90ca-238fee4f8a93
 # ╟─12fd4e40-5406-40e8-98af-9ba089bf37e7
@@ -747,7 +909,7 @@ Hơn nữa,
 # ╠═1fe6e455-b092-4afe-b443-1c4de154d3c8
 # ╠═2affebef-e5f4-4973-85ce-6ec1acd9909d
 # ╟─ef73a872-c40c-4b67-94dc-d80db984cfa8
-# ╟─0fe7d3a9-2166-41bf-9b15-f997ba1171aa
+# ╠═0fe7d3a9-2166-41bf-9b15-f997ba1171aa
 # ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
 # ╟─f06412aa-9aca-4805-b75b-93a19070da32
@@ -756,6 +918,10 @@ Hơn nữa,
 # ╟─65162d6d-be3a-421b-b04c-8eb8f76d3e02
 # ╟─4e82b334-308b-4f56-b25e-adcc498a4673
 # ╟─48d3dee7-5a02-4fc4-bdc3-057d61c2c825
-# ╠═fbcd6e7b-5b17-41b2-973e-d575d506cb2c
-# ╠═26c20232-6353-4439-87a5-e7ccee13a63c
-# ╠═699892d7-19be-4522-b961-af97bf7f4cc4
+# ╟─fbcd6e7b-5b17-41b2-973e-d575d506cb2c
+# ╟─26c20232-6353-4439-87a5-e7ccee13a63c
+# ╟─699892d7-19be-4522-b961-af97bf7f4cc4
+# ╟─c985f320-ebb3-42c8-a195-a0e08befcd0a
+# ╠═5e7ab74c-1473-4c8e-9d93-13dd9c108af2
+# ╠═37a597d5-f7f4-475c-bcf7-bfe42a2b1155
+# ╠═5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
