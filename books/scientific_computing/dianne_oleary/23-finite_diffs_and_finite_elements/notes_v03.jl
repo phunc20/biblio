@@ -7,7 +7,8 @@ using InteractiveUtils
 # ╔═╡ ffe1050f-57ed-4836-8bef-155a2ed17fbd
 begin
   using Pkg
-  Pkg.activate(Base.Filesystem.homedir() * "/.config/julia/projects/oft")
+  #Pkg.activate(Base.Filesystem.homedir() * "/.config/julia/projects/oft")
+  Pkg.activate("../../../../.julia_env/oft")
   using Plots
   using PlutoUI
   using TikzPictures
@@ -464,15 +465,15 @@ end
 md"""
 ## The Finite Element Method
 Je ne sais pas pourquoi j'ai rédigé la première partie (sur "_Différence Finie_") en
-français. Maintenant, on va entrer dans une nouvelle page, permettez-moi de choisir
+français. Maintenant, comme on va ouvrir une nouvelle page, permettez-moi de choisir
 une autre langue, le vietnamien, ce qui, j'espère, bénéficie un plus grand public.
 
 Phương pháp sắp sữa được giới thiệu sau đây được gọi là **Galerkin method**.
 Đại loại đối với một phương trình ODE hoặc PDE, mình hay nhân nó bằng một hàm, sau đó tích phân.
 Thay vì giải trực tiếp phương trình ban đầu, mình sẽ gải phương trình thứ hai này.
-Lấy ví dụ phương trình ban đầu trong chương này thì là
+Lấy ví dụ phương trình ở đầu chương:
 ```math
-\newcommand{\afAlign}[1]{\int_{0}^{1} \left( (a(t)u_{#1}'(t)) v_{#1}'(t) + c(t)u_{#1}(t))v_{#1}(t) \right) dt &= \int_{0}^{1} f(t)v_{#1}(t) dt}
+\newcommand{\afAlign}[1]{\int_{0}^{1} \left( a(t)u_{#1}'(t) v_{#1}'(t) + c(t)u_{#1}(t)v_{#1}(t) \right) dt &= \int_{0}^{1} f(t)v_{#1}(t) dt}
 
 \begin{align}
   -(a(t)u'(t))' - c(t)u(t) &= f(t),\; t \in (0, 1) \\
