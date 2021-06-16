@@ -10,5 +10,8 @@ to denote the version according to chronological order.
 will bi `_c` in the future, meaning **concise**.
 
 
+## Environment
+- To have the `TikzPictures`-drawn picture work on Debian, to my own experience, in addition to the standard TeX package, one need `sudo apt install texlive-luatex` as well.
+
 
 
