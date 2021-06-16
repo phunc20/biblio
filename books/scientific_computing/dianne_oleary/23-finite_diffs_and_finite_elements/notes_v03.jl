@@ -938,14 +938,48 @@ md"""
 Write a function (or a script) `fe_linear` which mimics the `finitediff1` but which uses finite element method.
 """
 
-# ╔═╡ c4b745a0-d183-4b2d-8fdc-4614ab804947
-
-
 # ╔═╡ 4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
 begin
   function ϕ′(M::Int, j::Int)
     return t -> gradient(ϕ(M, j), t)[1]
   end
+end
+
+# ╔═╡ a2d5d284-6b71-46c6-9fb0-f896fa242e8a
+begin
+  function linear_phi(f::Function, M::Int, j::Int)
+    integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=1e-8)
+    return integral
+    #1
+  end
+end
+
+# ╔═╡ ca796be1-5265-46a2-a4ab-509f2d54c72c
+begin
+  function bilinear_phiphi(a::Function, M::Int, k::Int, j::Int)
+    if abs(k - j) > 1
+      return 0
+    end
+    if k == j
+      return 2
+    else
+      return -1
+    end
+    # integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=1e-8)
+    # return integral
+  end
+end
+
+# ╔═╡ 2a0bf1bd-9bce-4ccd-b01f-7c476fd4fe8a
+function integrate_product(u::Function, v::Function, a::Number, b::Number; rtol=1e-8)
+  integral, err = quadgk(t -> u(t)*v(t), a, b, rtol=rtol)
+  return integral
+end
+
+# ╔═╡ cf7d12f6-628e-4e97-95e4-72b25207744b
+function integrate_product(u::Function, v::Function, w::Function, a::Number, b::Number; rtol=1e-8)
+  integral, err = quadgk(t -> u(t)*v(t)*w(t), a, b, rtol=rtol)
+  return integral
 end
 
 # ╔═╡ 7feaac8f-1b1f-40c6-a5e0-dc2c7b6b4eff
@@ -961,17 +995,20 @@ begin
     """
     rtol = 1e-4
     function aphiphi(k::Int, j::Int)
-      # if abs(k - j) > 1
-      #   return 0
-      # end
+      if abs(k - j) > 1
+        return 0
+      end
+      if k == j
+        return 2
+      else
+        return -1
+      end
       # integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
       # return integral
-      1
     end
     function fphi(j::Int)
-      #integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
-      #return integral
-      1
+      integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
+      return integral
     end
     #t = range(0, 1; length=M)
     #h = t[2]
@@ -984,14 +1021,19 @@ begin
     #c0 = c.(tmesh)
     #g = f0 = f(tmesh)
     g = [fphi(j) for j in 1:M-2]
+    #g = Array(fphi(j) for j in 1:M-2)
     diag = [aphiphi(j, j) for j in 1:M-2]
     ldiag = [aphiphi(j+1, j) for j in 1:M-3]
     udiag = ldiag
+    #udiag = [aphiphi(j, j-1) for j in 2:M-2]
     A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
     ## A * ucomp = g
     ucomp = A \ g
   end
 end
+
+# ╔═╡ d34648db-18df-4713-b548-4b56cba31bab
+g = [linear_phi(t->sin(t), 6, j) for j in 1:4]
 
 # ╔═╡ a61f14a5-2edc-4691-9501-bed30b30e766
 md"""
@@ -1077,9 +1119,13 @@ end
 # ╠═98acce2b-d7ab-494d-9589-2b9e7a845847
 # ╠═5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
 # ╟─44e71cee-fa27-434c-a7ad-a14d8f2026c8
-# ╠═c4b745a0-d183-4b2d-8fdc-4614ab804947
 # ╠═4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
+# ╠═a2d5d284-6b71-46c6-9fb0-f896fa242e8a
+# ╠═ca796be1-5265-46a2-a4ab-509f2d54c72c
+# ╠═2a0bf1bd-9bce-4ccd-b01f-7c476fd4fe8a
+# ╠═cf7d12f6-628e-4e97-95e4-72b25207744b
 # ╠═7feaac8f-1b1f-40c6-a5e0-dc2c7b6b4eff
+# ╠═d34648db-18df-4713-b548-4b56cba31bab
 # ╟─a61f14a5-2edc-4691-9501-bed30b30e766
 # ╠═e89ad2cc-af62-4730-8bb9-4dcaa745b91e
 # ╠═6c080408-8fb8-4a03-b8a8-66582070763d
