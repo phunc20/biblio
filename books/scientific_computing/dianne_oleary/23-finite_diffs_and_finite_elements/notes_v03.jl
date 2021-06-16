@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.7
+# v0.14.8
 
 using Markdown
 using InteractiveUtils
@@ -14,8 +14,10 @@ begin
   using TikzPictures
   using LaTeXStrings
   using SparseArrays
-  using Profile
+  #using Profile
   using BenchmarkTools
+  using QuadGK
+  using Flux
 end
 
 # ╔═╡ 843498a2-c9c8-11eb-31a4-fb7bd7be2a89
@@ -780,6 +782,26 @@ và xem những hằng số ``u_1, u_2, \ldots, u_{M-2}`` nên thoả mãn đi�
 Cái phương trình cuối cùng chính là điều khiện mà ``u_1, \ldots, u_{M-2}`` nên thỏa mãn, i.e. ``\left( u_1, \ldots, u_{M-2} \right)`` nên là giải của ``Au = g\,.``
 """
 
+# ╔═╡ 86863ec1-18d8-4215-a8f9-ac64cce03608
+md"""
+Thật ra, cái ma trận ở trên mình chưa có đưa nó về hình dạng đơn giản nhất:
+```math
+\newcommand{\aa}[2]{\int_0^1 \left( a(t){#1}'(t){#2}'(t) + c(t){#1}(t){#2}(t) \right) \,dt}
+\begin{align}
+  \mathrm{a}(\phi_k, \phi_j) &= \aa{\phi_k}{\phi_j} \\
+  &= \begin{cases}
+    0, &\lvert k - j \rvert > 1 \\
+    \int_{t_j}^{t_{j+1}} \left( -\frac{a(t)}{h^2} + c(t)\frac{(t-t_j)(t-t_{j+1})}{h^2} \right)\,dt , &k = j+1 \\
+    \int_{t_{j-1}}^{t_{j+1}} \left( \frac{a(t)}{h^2} + c(t)\phi_j^2(t) \right)\,dt , &k = j
+  \end{cases}
+\end{align}
+```
+
+**Rmk.**
+- Nhận xét quan trọng ở đây là ma trận ``A`` luôn là **_tridiagonal_**. ``(``Chú ý rằng không cần ``a(t) = 1, c(t) = 0\,).\;`` Cái kết quả này giống kết quả với finite difference -- Tức là trong cả finite difference lẫn finite element, ma trận ``A`` liên quan với EDO đầu chương đều là tridiagonal.
+- Một điều quan trọng khác: ``A`` symmetric.
+"""
+
 # ╔═╡ c985f320-ebb3-42c8-a195-a0e08befcd0a
 md"""
 Với ví dụ ``M=6, a(t)=1, c(t)=0``, chúng ta có
@@ -863,13 +885,135 @@ Với ``M=6\,,`` chúng ta có
 # ╔═╡ 5e7ab74c-1473-4c8e-9d93-13dd9c108af2
 md"""
 **Rmk.** Việc tính ``(f, \phi_j)`` tạm thời mình chưa có nghĩ ra cách nào tốt hơn numerical integration.
+
+#### Numerical integration with `QuadGK`
+Mình sẽ thử với package `QuadGK` và một vài ví dụ
+
+- ``f(t) = 1``
+- ``f(t) = \phi_j(t)``
+- ``f(t) = \sin t``
 """
 
-# ╔═╡ 37a597d5-f7f4-475c-bcf7-bfe42a2b1155
+# ╔═╡ ef18414a-ad2e-4847-9054-fe5b7051f0b9
+let
+  M = 6
+  j = 3
+  ϕ(M, j)
+  # f(t) = 1 => expected_ans = 1/h = 1/5
+  integral, err = quadgk(t -> ϕ(M, j)(t), 0, 1, rtol=1e-8)
+end
 
+# ╔═╡ 37a597d5-f7f4-475c-bcf7-bfe42a2b1155
+let
+  M = 6
+  j = 3
+  ϕ(M, j)
+  integral, err = quadgk(t -> ϕ(M, j)(t) * ϕ(M, j)(t), 0, 1, rtol=1e-8)
+end
+
+# ╔═╡ 0a99bb14-5676-4d0b-b03a-5e846dd5577e
+md"""
+The above integral equals ``2\int_0^{h} \frac{(t-h)^2}{h^2} dt = 2\int_{-h}^0 \frac{s^2}{h^2} ds = 2\frac{s^3}{3h^2} \lvert_{y=-h}^{0} = 2\frac{h^3}{3h^2} = 2\frac{h}{3}``
+"""
+
+# ╔═╡ 98acce2b-d7ab-494d-9589-2b9e7a845847
+let
+  M = 6
+  h = 1 / (M-1)
+  (h / 3) * 2
+end
 
 # ╔═╡ 5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
+let
+  # sin t is not easy to verify so let's skip this one.
+  M = 6
+  j = 3
+  f(t) = sin(t)
+  integral, err = quadgk(t -> f(t) * ϕ(M, j)(t), 0, 1, rtol=1e-8)
+end
 
+# ╔═╡ 44e71cee-fa27-434c-a7ad-a14d8f2026c8
+md"""
+### CHALLENGE 23.5.
+Write a function (or a script) `fe_linear` which mimics the `finitediff1` but which uses finite element method.
+"""
+
+# ╔═╡ c4b745a0-d183-4b2d-8fdc-4614ab804947
+
+
+# ╔═╡ 4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
+begin
+  function ϕ′(M::Int, j::Int)
+    return t -> gradient(ϕ(M, j), t)[1]
+  end
+end
+
+# ╔═╡ 7feaac8f-1b1f-40c6-a5e0-dc2c7b6b4eff
+begin
+  function fe_linear(M::Number, a::Function, c::Function, f::Function)
+    """
+    `a, c, f` are functions whose input is a vector and output is a vector.
+    Accurately speaking, `a` returns two vectors, the first one `a` itself,
+    the second one its derivative.
+
+    TODO:
+    01. Use @view
+    """
+    rtol = 1e-4
+    function aphiphi(k::Int, j::Int)
+      # if abs(k - j) > 1
+      #   return 0
+      # end
+      # integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
+      # return integral
+      1
+    end
+    function fphi(j::Int)
+      #integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
+      #return integral
+      1
+    end
+    #t = range(0, 1; length=M)
+    #h = t[2]
+    #tmesh = t[2:end-1]
+    #a0_and_a1 = a(tmesh)  # a0: 0th derivative, a1: 1st derivative
+    #a0 = @view a0_and_a1[1:end, 1]
+    #a1 = @view a0_and_a1[1:end, 2]
+    #a1_over_h = a1 ./ h
+    #a0_over_h² = a0 ./ h^2
+    #c0 = c.(tmesh)
+    #g = f0 = f(tmesh)
+    g = [fphi(j) for j in 1:M-2]
+    diag = [aphiphi(j, j) for j in 1:M-2]
+    ldiag = [aphiphi(j+1, j) for j in 1:M-3]
+    udiag = ldiag
+    A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+    ## A * ucomp = g
+    ucomp = A \ g
+  end
+end
+
+# ╔═╡ a61f14a5-2edc-4691-9501-bed30b30e766
+md"""
+#### `notes_v04.jl`
+After finishing writing the function `fe_linear`, I realized that
+the previous implementation of `finitediff1` was not good. I would
+like to go back and carry the same spirit from `fe_linear` to `finitediff1`.
+In particular, the `a` input arg, it should not be user-specified; user
+should only need to know `a(t)`, and only need to specify that.
+"""
+
+# ╔═╡ e89ad2cc-af62-4730-8bb9-4dcaa745b91e
+let
+  M = 6
+  a(t) = 1
+  c(t) = 0
+  f(t) = π^2 * sin(π*t)
+  fe_linear(M, a, c, f)
+end
+
+# ╔═╡ 6c080408-8fb8-4a03-b8a8-66582070763d
+[sin(π*t) for t = 1/5:1/5:4/5]
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -915,7 +1059,7 @@ md"""
 # ╟─0fe7d3a9-2166-41bf-9b15-f997ba1171aa
 # ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
 # ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
-# ╟─f06412aa-9aca-4805-b75b-93a19070da32
+# ╠═f06412aa-9aca-4805-b75b-93a19070da32
 # ╟─8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
 # ╟─800f2f97-5e6b-4dd4-955d-e9ef5662fe60
 # ╟─65162d6d-be3a-421b-b04c-8eb8f76d3e02
@@ -924,7 +1068,18 @@ md"""
 # ╟─fbcd6e7b-5b17-41b2-973e-d575d506cb2c
 # ╟─26c20232-6353-4439-87a5-e7ccee13a63c
 # ╟─699892d7-19be-4522-b961-af97bf7f4cc4
+# ╟─86863ec1-18d8-4215-a8f9-ac64cce03608
 # ╟─c985f320-ebb3-42c8-a195-a0e08befcd0a
 # ╟─5e7ab74c-1473-4c8e-9d93-13dd9c108af2
+# ╠═ef18414a-ad2e-4847-9054-fe5b7051f0b9
 # ╠═37a597d5-f7f4-475c-bcf7-bfe42a2b1155
+# ╟─0a99bb14-5676-4d0b-b03a-5e846dd5577e
+# ╠═98acce2b-d7ab-494d-9589-2b9e7a845847
 # ╠═5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
+# ╟─44e71cee-fa27-434c-a7ad-a14d8f2026c8
+# ╠═c4b745a0-d183-4b2d-8fdc-4614ab804947
+# ╠═4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
+# ╠═7feaac8f-1b1f-40c6-a5e0-dc2c7b6b4eff
+# ╟─a61f14a5-2edc-4691-9501-bed30b30e766
+# ╠═e89ad2cc-af62-4730-8bb9-4dcaa745b91e
+# ╠═6c080408-8fb8-4a03-b8a8-66582070763d
