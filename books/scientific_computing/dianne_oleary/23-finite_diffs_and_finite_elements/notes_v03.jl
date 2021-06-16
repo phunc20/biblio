@@ -994,14 +994,15 @@ begin
     01. Use @view
     """
     rtol = 1e-4
+    h = 1 / (M-1)
     function aphiphi(k::Int, j::Int)
       if abs(k - j) > 1
         return 0
       end
       if k == j
-        return 2
+        return 2 / h
       else
-        return -1
+        return -1.0 / h
       end
       # integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
       # return integral
@@ -1056,6 +1057,33 @@ end
 
 # ╔═╡ 6c080408-8fb8-4a03-b8a8-66582070763d
 [sin(π*t) for t = 1/5:1/5:4/5]
+
+# ╔═╡ 4a5332b3-da4a-42c5-8c91-f18c6bd68f56
+let
+  diag = [2 for _ in 1:5]
+  ldiag = [-1 for _ in 1:4]
+  udiag = ldiag
+  udiag = @view ldiag[1:end]
+  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+  g = randn(5)
+  A\g
+end
+
+# ╔═╡ db85041f-5928-4c10-8650-1ef108051b77
+md"""
+**(?)** What's the problem in the cells above and below? Why converting the dtype of the array saves the world?
+"""
+
+# ╔═╡ c294df42-bb15-4f3d-aef9-e19b409faa64
+let
+  diag = [2 for _ in 1:5]
+  ldiag = [-1.0 for _ in 1:4]
+  udiag = ldiag
+  udiag = @view ldiag[1:end]
+  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+  g = randn(5)
+  A\g
+end
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -1129,3 +1157,6 @@ end
 # ╟─a61f14a5-2edc-4691-9501-bed30b30e766
 # ╠═e89ad2cc-af62-4730-8bb9-4dcaa745b91e
 # ╠═6c080408-8fb8-4a03-b8a8-66582070763d
+# ╠═4a5332b3-da4a-42c5-8c91-f18c6bd68f56
+# ╟─db85041f-5928-4c10-8650-1ef108051b77
+# ╠═c294df42-bb15-4f3d-aef9-e19b409faa64
