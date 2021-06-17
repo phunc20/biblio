@@ -11,6 +11,7 @@ begin
   Pkg.activate("../../../../.julia_env/oft")
   using Plots
   using PlutoUI
+  using LinearAlgebra
   using TikzPictures
   using LaTeXStrings
   using SparseArrays
@@ -18,6 +19,7 @@ begin
   using BenchmarkTools
   using QuadGK
   using Flux
+  using Zygote: @adjoint
 end
 
 # ╔═╡ 843498a2-c9c8-11eb-31a4-fb7bd7be2a89
@@ -34,14 +36,6 @@ résoudre $u: [0,1] \to \mathbb{R}$ avec $u(0) = u(1) = 0\,.$
 En plus, on suppose qu'il existe une constante $\,a_0 > 0\,$ telle que $\,a(t) > a_0\,$ et que $\,c(t) \ge 0\,$
 pour tout $\,t \in [0,1]\,.$
 
-"""
-
-# ╔═╡ 3fb86eda-11a9-46e0-b4fc-cf9660f5765c
-md"""
-**(?)** How to type the two diff $a$'s in `LaTeX`?$(HTML("<br>"))
-**(R)**
-- `\mathrm{a}`
-- `a`
 """
 
 # ╔═╡ 5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
@@ -86,15 +80,10 @@ end
 # ╔═╡ c8275327-f599-4252-beb1-7227f5c5f7ba
 md"""
 ### CHALLENGE 23.1.
-Déduisez une équation la plus simple possible que vous arrivez à la rendre, à partir de
+Déduisez l'équation la plus simple possible que vous arrivez à la rendre, à partir de
 ```math
 M = 6,\, a(t) = 1,\, c(t) = 0\,.
 ```
-"""
-
-# ╔═╡ 091202a8-9921-49ba-8877-d5e9c9593356
-md"""
-**(?)** How to convert the whole markdown string to some, say, red, color?
 """
 
 # ╔═╡ b9fac562-a00c-489d-91a6-f25ad4348940
@@ -105,7 +94,7 @@ L'équation se simplifie comme
 - u''(t) = f(t) \,\text{ sur }\, (0, 1)\,.
 ```
 
-Si l'on substitue l'approximation par différences finies aux dérivées ci-dessus, on aura
+Si l'on substitue les approximations par différences finies aux dérivées ci-dessus, on aura
 ```math
 - \frac{u(t-h) - 2u(t) + u(t+h)}{h^2} \approx f(t) \,\text{ sur }\, (0, 1)\,.
 ```
@@ -202,9 +191,6 @@ Au cas particulier où ``M=6\,,`` on a
 
 """
 
-# ╔═╡ e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
-
-
 # ╔═╡ b529132e-2c1d-4d58-90ca-238fee4f8a93
 md"""
 ### CHALLENGE 23.2.
@@ -273,120 +259,27 @@ md"""
 C'est un peu curieux que tous les trois diagonales (`input args`) doivent avoir les mêmes longueurs (padded by zeros for sub/sup-diagonl).
 """
 
-# ╔═╡ 3b5f8e3c-236f-47c4-80ab-63328af079eb
-md"""
-**(?)** Pourquoi parfois `$(HTML("<br>"))` ne fonctionne pas? Que faire?
-"""
-
 # ╔═╡ 3c99b108-aadd-4b6b-8e04-a351e09d7487
 md"""
 #### `finitediff1.jl`
-Ensuite, on va coder `finitediff1.m` en Julia.
-
-En Julia, il n'y a pas de `linspace`. Par contre, on a le remplacement suivant.
+Ensuite, on va coder `finitediff1.m` en Julia. $(HTML("<br>"))
+En Julia, il n'y a pas de `linspace`. Par contre, on a le remplacement `range(0,1;length=M)`.
 """
-
-# ╔═╡ 6baa7a0c-84ff-4252-a914-efa150e1179c
-let
-  M = 6
-  0:1/(M-1):1
-end
-
-# ╔═╡ c6da89d8-de5b-4e01-98e4-db8039ecd18d
-xyz = zyx = 123
-
-# ╔═╡ b1745ec9-f4a1-4419-9827-8ca220f6e15c
-zyx
 
 # ╔═╡ 4728cfab-d857-4890-9b1e-68941224ee11
 md"""
+Pour construire une matrice tridiagonale, on a le choix parmi
+
 - [`spdigm` (**sparse diagonal matrix**)](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.spdiagm)
+- [`LinearAlgebra.Tridiagonal`](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/#LinearAlgebra.Tridiagonal)
 """
 
-# ╔═╡ 06a29505-2618-4425-83f2-faac5611ad56
-
-
-# ╔═╡ 2e8b74ed-85e9-4b39-82e4-59819c71353b
-function finitediff1(M::Number, a::Function, c::Function, f::Function)
-  """
-  `a, c, f` are functions whose input is a vector and output is a vector.
-  Accurately speaking, `a` returns two vectors, the first one `a` itself,
-  the second one its derivative.
-
-
-  TODO:
-  01. Use @view
-
-  """
-  t = range(0, 1; length=M)
-  ## This ensures that 
-  ## 1) length(t) equals 10
-  ## 2) t[1] equals 0 and t[end] = 1
-
-  h = t[2]              # same as h = 1 / (M-1) but save the work to recompute
-  tmesh = t[2:end-1]
-  a0_and_a1 = a(tmesh)  # a0: 0th derivative, a1: 1st derivative
-  a0 = @view a0_and_a1[1:end, 1]
-  a1 = @view a0_and_a1[1:end, 2]
-  a1_over_h = a1 ./ h
-  a0_over_h² = a0 ./ h^2
-  c0 = c.(tmesh)
-  #g = f0 = f(tmesh)
-  g = f.(tmesh)
-  diag = -a1_over_h + 2 .* a0_over_h² + c0
-  ldiag = (a1_over_h - a0_over_h²)[2:end]
-  udiag = - @view a0_over_h²[1:end-1]
-  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
-  ## A * ucomp = g
-  ucomp = A \ g
-end
-
-
-# ╔═╡ 5bc24084-8bb7-4abd-bc4d-4993c77466fd
-(t -> [cos(t), sin(t)])(π/2)
-
-# ╔═╡ c3149d94-4d4d-44e5-948e-19bbb356dcac
-(t -> [cos(t), sin(t)]).(0:π/2:2π)
-
-# ╔═╡ a634ba74-5f9c-404e-9605-398d3ad71df6
-typeof((t -> [cos(t), sin(t)]).(0:π/2:2π))
-
-# ╔═╡ 133a31b0-8ed5-466b-a294-8c6a1eb150e1
-Function
-
-# ╔═╡ 7bc31051-8b01-4451-9464-da72d93ebcbd
-(t -> [cos(t) sin(t)]).(0:π/2:2π)
-
-# ╔═╡ 4d946b97-caf5-4448-b019-9b34c2a6cc52
-typeof((t -> [cos(t) sin(t)]).(0:π/2:2π))
-
-# ╔═╡ 64684d8a-2b23-4891-a349-8c57db37136f
-(t -> [cos.(t) sin.(t)])(0:π/2:2π)  # This is what we are looking for! for `a`
-
-# ╔═╡ b7f67766-dd99-4d43-b2b2-7a8660dd1c74
-(t -> [cos.(t) sin.(t)])(0)  # double-check it works on a single number
-
-# ╔═╡ 56d24204-6c10-4f40-87f3-c0b5a8956ede
-let
-  a0, a1 = (t -> [cos.(t) sin.(t)])(0:π/2:2π)
-  a1
-end
-
-# ╔═╡ e5dcc8dd-2499-4767-bcc2-c27ccd6472e2
+# ╔═╡ 5f3ee67a-7404-4873-8c07-a4dc8858d073
 md"""
-**(?)** Is there a way in Julia to do what the above cell tries to do?
+L'EDO dans sa forme la plus générale compte la dérivée de ``a(t)``. On utilise la method `gradient` dans le package `Flux` pour cela.
+
+**N.B.** `gradient` donne `missing` quand on lui demande la dérivée d'une fonction constante. Par conséquent, j'ai écrit une method `derivative` wrap around `gradient` qui nous convient plus.
 """
-
-# ╔═╡ fe8efb0d-90bf-4dc3-9fd8-1af6199fa1ab
-size([1 2 3; 4 5 6])
-
-# ╔═╡ 3493c8ee-fc50-4878-9a8b-0781ca28fc39
-let
-  function a(t)
-    [ones(size(t)) zeros(size(t))]
-  end
-  a(3), a([1 2 3; 4 5 6])
-end
 
 # ╔═╡ bb6b8859-c566-4648-9ed4-b0744eb55b0a
 md"""
@@ -405,30 +298,13 @@ f(t) = -\frac{d^2 u}{dt^2} = \sin t\,.
 ```
 """
 
-# ╔═╡ 3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
-let
-  function a(t)
-    [ones(size(t)) zeros(size(t))]
-  end
-  M = 6
-  c(t) = 0
-  f(t) = sin(t)
-  # Posons u(t) = sin(t) ⟹  f(t) = -sin(t).
-  # Tous les deux lignes suivantes marchent.
-  finitediff1(M, a, t -> 0, t -> sin(t))
-  #finitediff1(M, a, c, f)
-end
-
 # ╔═╡ 5f089dfb-2ab6-404b-9f26-501a7b981690
 # Vérifions la solutions ci-dessus
-[sin(t) for t = 1/5:1/5:4/5]
-
-# ╔═╡ b8e5da32-39f1-4505-a05e-68bf375bf0e5
-1/5:1/5:4/5
+[sin(t) for t = range(0,1;length=6)[2:end-1]]
 
 # ╔═╡ 1d35c2ea-1960-47c9-b6cf-5ecc713f7f52
 md"""
-**(?)** Vous vous rendez compte d'où votre **"bug"** est?
+**(?)** Les résultats des deux cellules ci-dessus ne coïncident pas. Vous vous rendez compte d'où votre **"bug"** est?
 
 **(R)** Votre solution ``u`` ne satisfait pas les _boundary conditions_ (i.e. conditions aux bords).
 En effet, ``u(t) = \sin t \implies u(0) = 0 \text{ et } u(1) =`` $(sin(1))
@@ -444,21 +320,13 @@ f(t) = \pi^2 \sin(\pi t)\,.
 ```
 """
 
-# ╔═╡ 47967b6a-e045-41ec-9c64-8101ee06b5c8
-let
-  function a(t)
-    [ones(size(t)) zeros(size(t))]
-  end
-  M = 6
-  finitediff1(M, a, t -> 0, t -> π^2 * sin(π*t))
-end
-
 # ╔═╡ 01212e15-ef86-4c8d-ab79-46d8db111191
-# Vérifions la solutions ci-dessus
-[sin(π*t) for t = 1/5:1/5:4/5]
+[sin(π*t) for t = range(0,1;length=6)[2:end-1]]
 
 # ╔═╡ 1fe6e455-b092-4afe-b443-1c4de154d3c8
-
+md"""
+C'est bien, maintenant la solution fournie par la méthode de différence finie a l'air proche de la vraie solution.
+"""
 
 # ╔═╡ 2affebef-e5f4-4973-85ce-6ec1acd9909d
 
@@ -498,7 +366,7 @@ Galerkin method sẽ có vẻ giống kỹ thuật quen thuộc hay được s�
 - [_Cours d'analyse: Théorie des distributions et analyse de Fourier_, Jean-Michel Bony](https://www.amazon.com/Cours-danalyse-Th%C3%A9orie-distributions-analyse/dp/2730207759)
 - [_Functional analysis, Sobolev spaces and partial differential equations_, Haïm Brézis](http://www.math.utoronto.ca/almut/Brezis.pdf)
 
-Cái hàm ``v`` với cái giải ``u``, mình sẽ lấy từ/tìm trong không gian ``H_{0}^{1}((0, 1))``. Khi ngữ cảnh rõ rằng, thĩnh thoảng mình cũng bỏ cái khoảng (``I = (0,1)`` ở đây) và viết tắt thành ``H_0^1\,.``
+Cái hàm ``v`` với cái nghiệm ``u``, mình sẽ lấy/tìm từ không gian ``H_{0}^{1}((0, 1))``. Khi ngữ cảnh rõ rằng, thĩnh thoảng mình cũng bỏ cái khoảng (``I = (0,1)`` ở đây) và viết tắt thành ``H_0^1\,.``
 Nói một cách đơn giản, không gian ``H_{0}^{1}((0,1))`` thu tập những hàm ``w \in L^2((0,1))`` sao cho
 
 - w' cũng nằm ở trong ``L^2((0,1))`` luôn. (``w'`` ở đây với đạo hàm "_weak sense_")
@@ -546,112 +414,90 @@ Tương ứng với lựa chọn ``S_h`` piece-wise linear có một basis đơn
 """
 
 # ╔═╡ 5c77c1d4-c1c6-4245-a1d8-5de69afb140c
-
-
-# ╔═╡ 837ddcf9-3761-4701-aadb-d95dae81fa34
-md"""
-**(?)** _xấp xỉ của_ hay là _xấp xỉ với_?
-"""
-
-# ╔═╡ f06412aa-9aca-4805-b75b-93a19070da32
 begin
-  function ϕ(M::Int, j::Int)
+  function ϕ(M::Int, j::Int, t::Number)
+  #function ϕ(M, j, t)
     if M <= 0
       error("M must be a positive integer")
     end
     if j < 1 || j > M - 2
       error("j must be a positive integer in [1 .. M-2]")
     end
-    function ϕⱼ(t::Number)
-      # h = 1 / (M-1)
-      # tⱼ₋₁ = (j-1)*h
-      # tⱼ = j*h
-      # tⱼ₊₁ = (j+1)*h
-
-      tmesh = range(0,1;length=M)
-      h = tmesh[2]
-      tⱼ₋₁ = tmesh[j]
-      tⱼ   = tmesh[j+1]
-      tⱼ₊₁ = tmesh[j+2]
-
-      ## Need or no need of `return` in the following conditions?
-      if t > tⱼ₊₁
-        return 0
-      elseif t >= tⱼ
-        return (tⱼ₊₁ - t) / h
-      elseif t >= tⱼ₋₁
-        return (t - tⱼ₋₁) / h
-      else
-        return 0
-      end
-    end
-    return ϕⱼ
-  end
-end
-
-# ╔═╡ 8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
-begin
-  function ϕs(M::Int)
-    if M <= 0
-      error("M must be a positive integer")
-    end
-    tmesh = range(0, 1; length=M)
+    tmesh = range(0,1;length=M)
     h = tmesh[2]
-    function ϕⱼ(t::Number, j::Int)
-      if j < 1 || j > M - 2
-        error("j must be a positive integer in [1 .. M-2]")
-      end
-      tⱼ₋₁ = tmesh[j]
-      tⱼ   = tmesh[j+1]
-      tⱼ₊₁ = tmesh[j+2]
-      if t > tⱼ₊₁
-        return 0
-      elseif t >= tⱼ
-        return (tⱼ₊₁ - t) / h
-      elseif t >= tⱼ₋₁
-        return (t - tⱼ₋₁) / h
-      else
-        return 0
-      end
+    tⱼ₋₁ = tmesh[j]
+    tⱼ   = tmesh[j+1]
+    tⱼ₊₁ = tmesh[j+2]
+  
+    if t > tⱼ₊₁
+      return 0
+    elseif t >= tⱼ
+      return (tⱼ₊₁ - t) / h
+    elseif t >= tⱼ₋₁
+      return (t - tⱼ₋₁) / h
+    else
+      return 0
     end
-    return [t::Number -> ϕⱼ(t, j) for j = 1:M-2]
   end
+  function ϕ_adjoint(M, j, t, l)
+    tmesh = range(0,1;length=M)
+    h = tmesh[2]
+    tⱼ₋₁ = tmesh[j]
+    tⱼ   = tmesh[j+1]
+    tⱼ₊₁ = tmesh[j+2]
+    if t > tⱼ₊₁
+      return (l*0,)
+    elseif t >= tⱼ
+      return (-l/h,)
+    elseif t >= tⱼ₋₁
+      return (l/h,)
+    else
+      return (l*0,)
+    end
+  end
+  @adjoint ϕ(M,j,t) = ϕ(M,j,t), l -> (nothing, nothing, ϕ_adjoint(M,j,t,l))
 end
+
+# ╔═╡ f06412aa-9aca-4805-b75b-93a19070da32
+# begin
+#   function ϕ(M::Int, j::Int)
+#     if M <= 0
+#       error("M must be a positive integer")
+#     end
+#     if j < 1 || j > M - 2
+#       error("j must be a positive integer in [1 .. M-2]")
+#     end
+#     function ϕⱼ(t::Number)
+#       # h = 1 / (M-1)
+#       # tⱼ₋₁ = (j-1)*h
+#       # tⱼ = j*h
+#       # tⱼ₊₁ = (j+1)*h
+
+#       tmesh = range(0,1;length=M)
+#       h = tmesh[2]
+#       tⱼ₋₁ = tmesh[j]
+#       tⱼ   = tmesh[j+1]
+#       tⱼ₊₁ = tmesh[j+2]
+
+#       ## Need or no need of `return` in the following conditions?
+#       if t > tⱼ₊₁
+#         return 0
+#       elseif t >= tⱼ
+#         return (tⱼ₊₁ - t) / h
+#       elseif t >= tⱼ₋₁
+#         return (t - tⱼ₋₁) / h
+#       else
+#         return 0
+#       end
+#     end
+#     return ϕⱼ
+#   end
+# end
 
 # ╔═╡ 800f2f97-5e6b-4dd4-955d-e9ef5662fe60
 md"""
 #### Vẽ hat functions
 """
-
-# ╔═╡ 65162d6d-be3a-421b-b04c-8eb8f76d3e02
-let
-  M = 6
-  the_ϕs = ϕs(M)
-  alpha = 0.7
-  lw = 2
-  ts = range(0,1;length=700)
-  plot(ts,
-       the_ϕs[1].(ts),
-       linealpha=alpha,
-       linewidth=lw,
-       xlim=(0,1.1),
-       xticks=range(0,1;length=M),
-       yticks=range(0,1;length=M),
-       aspect_ratio=:equal,
-       label="ϕ1",
-       legend=:topleft,
-       background_color=:black,
-       title="M = $M",
-  )
-  for j in 2:M-2
-    plot!(ts, the_ϕs[j].(ts),
-          linewidth=lw,
-          linealpha=alpha,
-          label="ϕ$(j)")
-  end
-  plot!()
-end
-
 
 # ╔═╡ 4e82b334-308b-4f56-b25e-adcc498a4673
 let
@@ -661,7 +507,7 @@ let
   lw = 2
   ts = range(0,1;length=700)
   plot(ts,
-       ϕ(M,1).(ts),
+       (t->ϕ(M,1,t)).(ts),
        linealpha=alpha,
        linewidth=lw,
        xlim=(0,1.1),
@@ -675,7 +521,7 @@ let
   )
   for j in 2:M-2
     plot!(ts,
-          ϕ(M,j).(ts),
+          (t->ϕ(M,j,t)).(ts),
           linewidth=lw,
           linealpha=alpha,
           label="ϕ$(j)")
@@ -779,7 +625,7 @@ và xem những hằng số ``u_1, u_2, \ldots, u_{M-2}`` nên thoả mãn đi�
   \fphi{M-2} \\
 \end{pmatrix}
 ```
-Cái phương trình cuối cùng chính là điều khiện mà ``u_1, \ldots, u_{M-2}`` nên thỏa mãn, i.e. ``\left( u_1, \ldots, u_{M-2} \right)`` nên là giải của ``Au = g\,.``
+Cái phương trình cuối cùng chính là điều khiện mà ``u_1, \ldots, u_{M-2}`` nên thỏa mãn, i.e. ``\left( u_1, \ldots, u_{M-2} \right)`` nên là nghiệm của ``Au = g\,.``
 """
 
 # ╔═╡ 86863ec1-18d8-4215-a8f9-ac64cce03608
@@ -898,17 +744,15 @@ Mình sẽ thử với package `QuadGK` và một vài ví dụ
 let
   M = 6
   j = 3
-  ϕ(M, j)
   # f(t) = 1 => expected_ans = 1/h = 1/5
-  integral, err = quadgk(t -> ϕ(M, j)(t), 0, 1, rtol=1e-8)
+  integral, err = quadgk(t -> ϕ(M, j, t), 0, 1, rtol=1e-8)
 end
 
 # ╔═╡ 37a597d5-f7f4-475c-bcf7-bfe42a2b1155
 let
   M = 6
   j = 3
-  ϕ(M, j)
-  integral, err = quadgk(t -> ϕ(M, j)(t) * ϕ(M, j)(t), 0, 1, rtol=1e-8)
+  integral, err = quadgk(t -> ϕ(M, j, t) * ϕ(M, j, t), 0, 1, rtol=1e-8)
 end
 
 # ╔═╡ 0a99bb14-5676-4d0b-b03a-5e846dd5577e
@@ -925,11 +769,11 @@ end
 
 # ╔═╡ 5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
 let
-  # sin t is not easy to verify so let's skip this one.
+  # sin(t) is tedious to verify, so let's skip its verification here.
   M = 6
   j = 3
   f(t) = sin(t)
-  integral, err = quadgk(t -> f(t) * ϕ(M, j)(t), 0, 1, rtol=1e-8)
+  integral, err = quadgk(t -> f(t) * ϕ(M, j, t), 0, 1, rtol=1e-8)
 end
 
 # ╔═╡ 44e71cee-fa27-434c-a7ad-a14d8f2026c8
@@ -937,41 +781,6 @@ md"""
 ### CHALLENGE 23.5.
 Write a function (or a script) `fe_linear` which mimics the `finitediff1` but which uses finite element method.
 """
-
-# ╔═╡ 4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
-begin
-  function ϕ′(M::Int, j::Int)
-    return t -> gradient(ϕ(M, j), t)[1]
-  end
-end
-
-# ╔═╡ a2d5d284-6b71-46c6-9fb0-f896fa242e8a
-begin
-  function linear_phi(f::Function, M::Int, j::Int)
-    integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=1e-8)
-    return integral
-    #1
-  end
-end
-
-# ╔═╡ ca796be1-5265-46a2-a4ab-509f2d54c72c
-begin
-  function bilinear_phiphi(a::Function, M::Int, k::Int, j::Int)
-    # if abs(k - j) > 1
-    #   return 0
-    # end
-    # if k == j
-    #   return 2
-    # else
-    #   return -1
-    # end
-    integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=1e-8)
-    return integral
-  end
-end
-
-# ╔═╡ 4329cbca-8b6b-4656-878b-676826e50668
-[bilinear_phiphi(t->1, 6, j, j) for j in 1:5]
 
 # ╔═╡ 2a0bf1bd-9bce-4ccd-b01f-7c476fd4fe8a
 function integrate_product(u::Function, v::Function, a::Number=0, b::Number=1; rtol=1e-8)
@@ -1039,6 +848,62 @@ end
 # ╔═╡ d34648db-18df-4713-b548-4b56cba31bab
 g = [linear_phi(t->sin(t), 6, j) for j in 1:4]
 
+# ╔═╡ 8f14cb22-b2cc-4379-927b-90689f3e868c
+function derivative(f::Function)::Function
+  f′(t) = gradient(f, t)[1]
+  function g(t)
+    if f′(t) === nothing
+      0.
+    else
+      f′(t)
+    end
+  end
+  g
+end
+
+# ╔═╡ 2e8b74ed-85e9-4b39-82e4-59819c71353b
+function finitediff1(M::Number, a::Function, c::Function, f::Function)
+  t = range(0, 1; length=M)
+  ## This ensures that 
+  ## 1) length(t) equals 10
+  ## 2) t[1] equals 0 and t[end] = 1
+
+  h = t[2]              # same as h = 1 / (M-1) but save the work to recompute
+  tmesh = t[2:end-1]    # i.e. all endpoints except for t₀ = 0 and t₁ = 1
+  a0 = a.(tmesh)
+  #a1 = (t -> gradient(a, t)[1]).(tmesh) # ceci ne marche pas pour fonctions constante
+  a1 = derivative(a).(tmesh)
+  a1_over_h = a1 ./ h
+  a0_over_h² = a0 ./ h^2
+  c0 = c.(tmesh)
+  g = f.(tmesh)
+  diag = -a1_over_h + 2 .* a0_over_h² + c0
+  ldiag = (a1_over_h - a0_over_h²)[2:end]
+  udiag = -a0_over_h²[1:end-1]
+  #A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
+  A = Tridiagonal(ldiag, diag, udiag)
+  ## A * ucomp = g
+  ucomp = A \ g
+end
+
+# ╔═╡ 3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
+let
+  M = 6
+  a(t) = 1
+  c(t) = 0
+  f(t) = sin(t)
+  # Posons u(t) = sin(t) ⟹  f(t) = -sin(t).
+  # Tous les deux lignes suivantes marchent.
+  finitediff1(M, t -> 1, t -> 0, t -> sin(t))
+  #finitediff1(M, a, c, f)
+end
+
+# ╔═╡ 47967b6a-e045-41ec-9c64-8101ee06b5c8
+let
+  M = 6
+  finitediff1(M, t -> 1, t -> 0, t -> π^2 * sin(π*t))
+end
+
 # ╔═╡ a61f14a5-2edc-4691-9501-bed30b30e766
 md"""
 #### `notes_v04.jl`
@@ -1050,32 +915,16 @@ should only need to know `a(t)`, and only need to specify that.
 """
 
 # ╔═╡ e89ad2cc-af62-4730-8bb9-4dcaa745b91e
-let
-  M = 6
-  a(t) = 1
-  c(t) = 0
-  f(t) = π^2 * sin(π*t)
-  fe_linear(M, a, c, f)
-end
+# let
+#   M = 6
+#   a(t) = 1
+#   c(t) = 0
+#   f(t) = π^2 * sin(π*t)
+#   fe_linear(M, a, c, f)
+# end
 
 # ╔═╡ 6c080408-8fb8-4a03-b8a8-66582070763d
 [sin(π*t) for t = 1/5:1/5:4/5]
-
-# ╔═╡ 4a5332b3-da4a-42c5-8c91-f18c6bd68f56
-let
-  diag = [2 for _ in 1:5]
-  ldiag = [-1 for _ in 1:4]
-  udiag = ldiag
-  udiag = @view ldiag[1:end]
-  A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
-  g = randn(5)
-  A\g
-end
-
-# ╔═╡ db85041f-5928-4c10-8650-1ef108051b77
-md"""
-**(?)** What's the problem in the cells above and below? Why converting the dtype of the array saves the world?
-"""
 
 # ╔═╡ c294df42-bb15-4f3d-aef9-e19b409faa64
 let
@@ -1088,99 +937,172 @@ let
   A\g
 end
 
-# ╔═╡ 799360b2-6518-45ac-92aa-04360aa49fcb
+# ╔═╡ 0a3b6d61-b63a-4d28-93c6-b136f3456c9e
+# function derivative(f::Function)::Function
+#   #f′(t) = gradient(f, t)[1]
+#   function g(t)
+#     #global f′
+#     x = gradient(f,t)[1]
+#     #if f′(t) === nothing
+#     if x === nothing
+#       return 0.
+#     else
+#       #return f′(t)
+#       return x
+#     end
+#   end
+#   # if f′(0) === nothing
+#   #   return t -> 0
+#   # else
+#   #   return f′
+#   # end
+#   return g
+# end
 
-begin
-  function fe_linear2(M::Number, a::Function, c::Function, f::Function)
-    """
-    """
-    rtol = 1e-4
-    h = 1 / (M-1)
-    function aphiphi(k::Int, j::Int)
-      # if abs(k - j) > 1
-      #   return 0
-      # end
-      # if k == j
-      #   return 2 / h
-      # else
-      #   return -1.0 / h
-      # end
-      #integral, err = quadgk(t -> a(t)*ϕ′(M,k)(t)*ϕ′(M,j)(t) + c(t)*ϕ(M,k)(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
-      #return integrate_product(a, ϕ′(M,k), ϕ′(M,j)) + integrate_product(c, ϕ(M,k), ϕ(M,j))
-      return bilinear_phiphi(a::Function, M::Int, k::Int, j::Int)
-    end
-    function fphi(j::Int)
-      #integral, err = quadgk(t -> f(t)*ϕ(M,j)(t), 0, 1, rtol=rtol)
-      return integrate_product(f, ϕ(M,j))
-    end
-    g = [fphi(j) for j in 1:M-2]
-    diag = [aphiphi(j, j) for j in 1:M-2]
-    ldiag = [aphiphi(j+1, j) for j in 1:M-3]
-    udiag = ldiag
-    #udiag = [aphiphi(j, j-1) for j in 2:M-2]
-    A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
-    ## A * ucomp = g
-    ucomp = A \ g
-  end
+# ╔═╡ d37a1d63-4171-43c1-ae40-c9c71bfb8e09
+function naive_derivative(f::Function)::Function
+  #f′(t) = gradient(f, t)[1]
+  return t -> gradient(f, t)[1]
 end
 
-# ╔═╡ 84b5db45-26fb-40ca-8ab8-9388b9d153ba
+# ╔═╡ 13ca663c-e8bb-42b9-80fe-10bf2d384bb7
+let
+  function f(t)
+    if t > 0
+      t
+    else
+      0
+    end
+  end
+  f(π), f(-π), derivative(f)(π), derivative(f)(-π), naive_derivative(f)(π), naive_derivative(f)(-π)
+end
+
+# ╔═╡ a79042bc-a2d2-4a62-abd8-6995bc135a24
+let
+  function f(t)
+    if t > 0
+      t
+    else
+      0
+    end
+  end
+  a = 1/5
+  f(a), f(-a), derivative(f)(a), derivative(f)(-a), naive_derivative(f)(a), naive_derivative(f)(-a)
+end
+
+# ╔═╡ fe1e7ad9-b7fe-488b-bcfd-01c4723395e1
+#nothing * 3.0  # MethodError: no such method as *(::Nothing, ::Number)
+
+# ╔═╡ 3f5270aa-885f-478b-aab2-21dc3851caa6
+let
+  function f(t)::Number
+    if t > 0
+      t
+    else
+      0
+    end
+  end
+  gradient(f,π), gradient(f,-π)
+end
+
+# ╔═╡ 3b8eb881-afe9-4401-828a-c03fb0c4a8fe
+gradient(t->t, π), gradient(t->0, -π)
+
+# ╔═╡ e065f6e4-543b-465e-9b0f-959b6a8975af
+md"""
+#### Improvement?
+It seems that there exists this `Tridiagonal` thing in `LinearAlgebra` package, which we can use in place of `spdigm` in `SparseArrays`.
+"""
+
+# ╔═╡ cf9b2c80-d670-4d14-b716-ed3292fe1fa6
+let
+  function f(t)
+      t
+  end
+  gradient(f, π), gradient(f, -π), gradient(f, 3.14159)
+end
+
+# ╔═╡ 58ddaa61-9e63-4e93-865e-105fa442714a
+typeof(π), typeof(-π)
+
+# ╔═╡ 9584f9b1-2bf7-43bb-8a05-ae966a786eac
+Irrational <: Real
+
+# ╔═╡ 1ccf50a9-5490-410d-be9a-b800ad9bac09
+Irrational <: AbstractFloat, Rational <: AbstractFloat
+
+# ╔═╡ 31ee9fc2-88c2-43fc-b42f-766d60d6e1d8
+Unsigned <: Number, Unsigned <: Integer
+
+# ╔═╡ 9d9b5f27-1839-4c41-9a71-a77f3673efa3
+derivative(sin).([j*π/2 for j = 0:4])
+
+# ╔═╡ cdc53410-6e4d-4df9-86a2-0adebcb6d122
+derivative(t->1).(range(0,1;length=10))
+
+# ╔═╡ 4dae4a2a-b9ae-4c13-9b3d-97720399e44b
 let
   M = 6
-  a(t) = 1
-  c(t) = 0
-  f(t) = π^2 * sin(π*t)
-  fe_linear2(M, a, c, f)
+  j = 3
+  derivative(ϕ(M,j))(3/(M-1))
+  #ϕ(M,j).(range(0,1;length=M))
 end
+
+# ╔═╡ fdb4d773-543d-40eb-8bea-d07dc8444f9f
+let
+  function un(t::Number)
+    return 1
+  end
+  derivative(un)(π)
+end
+
+# ╔═╡ 7d5f6add-d9dc-4e4a-9058-8380dfbac69b
+gradient(t->1, π)
+
+# ╔═╡ 09e3d594-6496-4458-8cd7-934840e1ccb8
+function rma_integrand(a::Function, c::Function, u::Function, v::Function)::Function
+  return t -> a(t) * derivative(u)(t) * derivative(v)(t) + c(t) * u(t) * v(t)
+end
+
+# ╔═╡ 1be5d29c-0be3-4ed5-84c6-cb7eafa44ffd
+let
+  M = 6
+  j = 2
+  integral, err = quadgk(rma_integrand(t->1, t->0, ϕ(M,j), ϕ(M,j)), 0, 1; rtol=1e-5)
+end
+
+# ╔═╡ bacca6c4-edbe-4eef-a9f9-d472b8360ff6
+derivative(ϕ(6,3)).(range(0,1;length=6))
+
+# ╔═╡ e3041732-73eb-44a3-b7ca-92fd4557422e
+derivative(sin)(3/5)
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
 # ╟─843498a2-c9c8-11eb-31a4-fb7bd7be2a89
-# ╟─3fb86eda-11a9-46e0-b4fc-cf9660f5765c
 # ╟─5c17ad87-dc9f-4cb4-80f5-8717626cfcb3
 # ╟─c8275327-f599-4252-beb1-7227f5c5f7ba
-# ╟─091202a8-9921-49ba-8877-d5e9c9593356
 # ╟─b9fac562-a00c-489d-91a6-f25ad4348940
-# ╠═e97de2ac-1085-4b6c-ac91-2bafc3f3f3b4
 # ╟─b529132e-2c1d-4d58-90ca-238fee4f8a93
 # ╟─12fd4e40-5406-40e8-98af-9ba089bf37e7
-# ╟─3b5f8e3c-236f-47c4-80ab-63328af079eb
 # ╟─3c99b108-aadd-4b6b-8e04-a351e09d7487
-# ╠═6baa7a0c-84ff-4252-a914-efa150e1179c
-# ╠═c6da89d8-de5b-4e01-98e4-db8039ecd18d
-# ╠═b1745ec9-f4a1-4419-9827-8ca220f6e15c
 # ╟─4728cfab-d857-4890-9b1e-68941224ee11
-# ╠═06a29505-2618-4425-83f2-faac5611ad56
+# ╟─5f3ee67a-7404-4873-8c07-a4dc8858d073
+# ╟─8f14cb22-b2cc-4379-927b-90689f3e868c
 # ╠═2e8b74ed-85e9-4b39-82e4-59819c71353b
-# ╠═5bc24084-8bb7-4abd-bc4d-4993c77466fd
-# ╠═c3149d94-4d4d-44e5-948e-19bbb356dcac
-# ╠═a634ba74-5f9c-404e-9605-398d3ad71df6
-# ╠═133a31b0-8ed5-466b-a294-8c6a1eb150e1
-# ╠═7bc31051-8b01-4451-9464-da72d93ebcbd
-# ╠═4d946b97-caf5-4448-b019-9b34c2a6cc52
-# ╠═64684d8a-2b23-4891-a349-8c57db37136f
-# ╠═b7f67766-dd99-4d43-b2b2-7a8660dd1c74
-# ╠═56d24204-6c10-4f40-87f3-c0b5a8956ede
-# ╟─e5dcc8dd-2499-4767-bcc2-c27ccd6472e2
-# ╠═fe8efb0d-90bf-4dc3-9fd8-1af6199fa1ab
-# ╠═3493c8ee-fc50-4878-9a8b-0781ca28fc39
 # ╟─bb6b8859-c566-4648-9ed4-b0744eb55b0a
 # ╠═3c845ed7-0a2a-4ff9-9573-a9ef9cf79ca9
 # ╠═5f089dfb-2ab6-404b-9f26-501a7b981690
-# ╠═b8e5da32-39f1-4505-a05e-68bf375bf0e5
 # ╟─1d35c2ea-1960-47c9-b6cf-5ecc713f7f52
 # ╠═47967b6a-e045-41ec-9c64-8101ee06b5c8
 # ╠═01212e15-ef86-4c8d-ab79-46d8db111191
-# ╠═1fe6e455-b092-4afe-b443-1c4de154d3c8
+# ╟─1fe6e455-b092-4afe-b443-1c4de154d3c8
 # ╠═2affebef-e5f4-4973-85ce-6ec1acd9909d
 # ╟─ef73a872-c40c-4b67-94dc-d80db984cfa8
 # ╟─0fe7d3a9-2166-41bf-9b15-f997ba1171aa
 # ╠═5c77c1d4-c1c6-4245-a1d8-5de69afb140c
-# ╟─837ddcf9-3761-4701-aadb-d95dae81fa34
 # ╠═f06412aa-9aca-4805-b75b-93a19070da32
-# ╟─8f5f4a87-4f69-4a24-a0ff-1c66d144cd26
 # ╟─800f2f97-5e6b-4dd4-955d-e9ef5662fe60
-# ╟─65162d6d-be3a-421b-b04c-8eb8f76d3e02
 # ╟─4e82b334-308b-4f56-b25e-adcc498a4673
 # ╟─48d3dee7-5a02-4fc4-bdc3-057d61c2c825
 # ╟─fbcd6e7b-5b17-41b2-973e-d575d506cb2c
@@ -1195,10 +1117,6 @@ end
 # ╠═98acce2b-d7ab-494d-9589-2b9e7a845847
 # ╠═5a7ae6ff-5adc-4941-9ee0-7c1a7a4c8c20
 # ╟─44e71cee-fa27-434c-a7ad-a14d8f2026c8
-# ╠═4e1d54bd-31cf-4cef-a38b-eef7b0dc02e3
-# ╠═a2d5d284-6b71-46c6-9fb0-f896fa242e8a
-# ╠═ca796be1-5265-46a2-a4ab-509f2d54c72c
-# ╠═4329cbca-8b6b-4656-878b-676826e50668
 # ╠═2a0bf1bd-9bce-4ccd-b01f-7c476fd4fe8a
 # ╠═cf7d12f6-628e-4e97-95e4-72b25207744b
 # ╠═7feaac8f-1b1f-40c6-a5e0-dc2c7b6b4eff
@@ -1206,8 +1124,26 @@ end
 # ╟─a61f14a5-2edc-4691-9501-bed30b30e766
 # ╠═e89ad2cc-af62-4730-8bb9-4dcaa745b91e
 # ╠═6c080408-8fb8-4a03-b8a8-66582070763d
-# ╠═4a5332b3-da4a-42c5-8c91-f18c6bd68f56
-# ╟─db85041f-5928-4c10-8650-1ef108051b77
 # ╠═c294df42-bb15-4f3d-aef9-e19b409faa64
-# ╠═799360b2-6518-45ac-92aa-04360aa49fcb
-# ╠═84b5db45-26fb-40ca-8ab8-9388b9d153ba
+# ╠═0a3b6d61-b63a-4d28-93c6-b136f3456c9e
+# ╠═d37a1d63-4171-43c1-ae40-c9c71bfb8e09
+# ╠═13ca663c-e8bb-42b9-80fe-10bf2d384bb7
+# ╠═a79042bc-a2d2-4a62-abd8-6995bc135a24
+# ╠═fe1e7ad9-b7fe-488b-bcfd-01c4723395e1
+# ╠═3f5270aa-885f-478b-aab2-21dc3851caa6
+# ╠═3b8eb881-afe9-4401-828a-c03fb0c4a8fe
+# ╟─e065f6e4-543b-465e-9b0f-959b6a8975af
+# ╠═cf9b2c80-d670-4d14-b716-ed3292fe1fa6
+# ╠═58ddaa61-9e63-4e93-865e-105fa442714a
+# ╠═9584f9b1-2bf7-43bb-8a05-ae966a786eac
+# ╠═1ccf50a9-5490-410d-be9a-b800ad9bac09
+# ╠═31ee9fc2-88c2-43fc-b42f-766d60d6e1d8
+# ╠═9d9b5f27-1839-4c41-9a71-a77f3673efa3
+# ╠═cdc53410-6e4d-4df9-86a2-0adebcb6d122
+# ╠═4dae4a2a-b9ae-4c13-9b3d-97720399e44b
+# ╠═fdb4d773-543d-40eb-8bea-d07dc8444f9f
+# ╠═7d5f6add-d9dc-4e4a-9058-8380dfbac69b
+# ╠═09e3d594-6496-4458-8cd7-934840e1ccb8
+# ╠═1be5d29c-0be3-4ed5-84c6-cb7eafa44ffd
+# ╠═bacca6c4-edbe-4eef-a9f9-d472b8360ff6
+# ╠═e3041732-73eb-44a3-b7ca-92fd4557422e
