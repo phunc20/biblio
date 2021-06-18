@@ -912,10 +912,51 @@ end
 # ╔═╡ bacca6c4-edbe-4eef-a9f9-d472b8360ff6
 md"""
 ### Higher-Order Elements
+Cô O'Leary nói rằng ta có thể chứng minh rằng nghiệm xấp xỉ tìm được ở trên luôn luôn ``O(h^2)`` gần với nghiệm thực sự. Cái này là **linear elements**.
 
+Chúng ta có thể lên một bức hơn nữa tới **quadratic elements**, thì cái nghiệm xấp xỉ được tìm ra sẽ gần hơn (``\,O(h^3)\,``). Chúng ta có một basis thuần tiện cho quadratic elements như sau:
+
+```math
+\phi_1, \ldots, \phi_{M-2}, \psi_1, \ldots, \psi_{M-1}\,,
+```
+
+trong đó ``\psi_{j}`` là một hàm quadratic (i.e. parabola) trên khoảng ``[t_{j-1}, t_j]`` và bằng không ở ngoài khoảng. ``\psi_{j}`` được xác định bởi ba điểm
+```math
+\begin{align}
+  \psi_j(t_{j-1})             &= 0 \\
+  \psi_j(t_{j-1}+\frac{h}{2}) &= 1 \\
+  \psi_j(t_{j})               &= 0
+\end{align}
+```
+
+**N.B.** There is one more ``\psi`` than ``\phi\,.`` Indeed, there are
+
+- ``(M-1)\;`` ``\psi``'s
+- ``(M-2)\;`` ``\phi``'s
+
+
+
+**(?)** Why the choice for these particular functions? Why quadratic elements consist of these function? How to generalize to cubic, quartic elements, and so on?
 """
 
 # ╔═╡ 887b6cee-2dd3-43db-bc46-39a6e9945c44
+md"""
+### Challenge 23.6.
+Mục tiêu của challenge này là để viết một method `fe_quadratic` implement ý tưởng được đề xuất ở trên.
+Xong sau đó chúng ta sẽ so sánh kết quả của quadratic elements với linear elements để xem có phải
+nó thật sự đặt được kết quả gần hơn.
+
+Một điều đáng chú ý là
+> Để so sánh quadratic với linear, vì hai không gian ``S_h`` có dimension không tương động, nên chúng ta sẽ cố gắng sắp xét cho dimension tương động trước khi khởi hành việc so sánh. Đại loại đới với linear elements, chúng ta vẫn giữ nguyên việc cắt ``[0, 1]`` thành ``M-1`` phần, và lấy hat functions ``\phi_1, \ldots, \phi_{M-2}`` làm basis. Nhưng đối với quadratic elements, chúng ta sẽ cắt khoảng ``[0,1]`` thành ``m`` phần, trong đó ``m = \lfloor \frac{M}{2} \rfloor\,.`` Như vậy sẽ có ``m`` quadratic elements và ``m-1`` linear elements. Như vậy dimensions hai bên sẽ là `M-2` và ``2m-1``, là hai con số rất gần với nhau.
+```math
+  m = \lfloor \frac{M}{2} \rfloor \implies
+  \frac{M-1}{2} \le m \le \frac{M}{2}
+  \implies
+  M-2 \le 2m-1 \le M-1\,.
+```
+"""
+
+# ╔═╡ 68334b6e-e4df-42f3-823f-24438b3b61d9
 
 
 # ╔═╡ Cell order:
@@ -969,5 +1010,6 @@ md"""
 # ╠═8a63ac98-62b9-48a7-8b48-6ab6b47259ca
 # ╠═410156d2-a747-4363-9c80-3d27c202ec78
 # ╠═1be5d29c-0be3-4ed5-84c6-cb7eafa44ffd
-# ╠═bacca6c4-edbe-4eef-a9f9-d472b8360ff6
-# ╠═887b6cee-2dd3-43db-bc46-39a6e9945c44
+# ╟─bacca6c4-edbe-4eef-a9f9-d472b8360ff6
+# ╟─887b6cee-2dd3-43db-bc46-39a6e9945c44
+# ╠═68334b6e-e4df-42f3-823f-24438b3b61d9
