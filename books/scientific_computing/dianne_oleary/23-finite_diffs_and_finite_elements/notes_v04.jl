@@ -941,7 +941,7 @@ trong đó ``\psi_{j}`` là một hàm quadratic (i.e. parabola) trên khoảng 
 
 # ╔═╡ 887b6cee-2dd3-43db-bc46-39a6e9945c44
 md"""
-### Challenge 23.6.
+### CHALLENGE 23.6.
 Mục tiêu của challenge này là để viết một method `fe_quadratic` implement ý tưởng được đề xuất ở trên.
 Xong sau đó chúng ta sẽ so sánh kết quả của quadratic elements với linear elements để xem có phải
 nó thật sự đặt được kết quả gần hơn.
@@ -957,6 +957,176 @@ Một điều đáng chú ý là
 """
 
 # ╔═╡ 68334b6e-e4df-42f3-823f-24438b3b61d9
+md"""
+### Solution 23.6.
+Cách suy luận ở đây tương từ với lúc chúng ta làm bằng linear elements, nên chúng ta sẽ không viết quá chi tiết ở đây nữa, chỉ viết những suy luận quan trọng hơn.
+
+Nhắc lại lần nữa, chúng ta lấy
+```math
+\begin{align}
+  B   &= \{\phi_1, \ldots, \phi_{m-1}, \psi_1, \ldots, \psi_{m}\}\,, \\
+  S_h &= \text{span}(B)\,.
+\end{align}
+```
+
+Y chang với lúc linear elements, chúng ta nhu cầu nghiệm ``u_h \in S_h`` thỏa mãn
+```math
+\mathrm{a}(u_h, \xi) = (f, \xi) \quad\forall\; \xi \in B\,.
+```
+
+Ghi ``u_h \in S_h`` thành linear combination
+```math
+u_h = \sum_{j=1}^{m-1} u_j \phi_j + \sum_{j=1}^{m} \tilde{u}_j \psi_j\,,
+```
+rồi thay vô đẳng thức ở trên, thì chúng ta sẽ được ``(m-1) + m = 2m - 1`` phương trình để giải ``2m - 1 `` unknowns, namely ``u_1, \ldots, u_{m-1}, \tilde{u}_1, \ldots, \tilde{u}_{m}\,.``
+
+Do bilinearity và linearity của ``\mathrm{a}(\cdot, \cdot)`` và ``(f, \cdot)``,
+và do tích phân của cặp đôi từ ``B`` bằng không khi subscripts cách xa nhau (e.g. ``\mathrm{a}(\psi_j, \psi_k) = 0`` khi ``j\ne k``), chúng ta có
+
+```math
+\begin{align}
+  %\forall\; j&=1,\ldots,m-1, &\mathrm{a}(u_h, \phi_j) &= \int_0^1 \left( a(t) {\phi_j}'(t) \left(
+  %  u_{j-1}{\phi_{j-1}}'(t) +
+  %  u_{j}{\phi_{j}}'(t) +
+  %  u_{j+1}{\phi_{j+1}}'(t) +
+  %  \tilde{u}_{j}{\psi_{j}}'(t) +
+  %  \tilde{u}_{j+1}{\psi_{j+1}}'(t)
+  %  \right) + c(t) {\phi_j}(t) \left(
+  %  u_{j-1}{\phi_{j-1}}(t) +
+  %  u_{j}{\phi_{j}}(t) +
+  %  u_{j+1}{\phi_{j+1}}(t) +
+  %  \tilde{u}_{j}{\psi_{j}}(t) +
+  %  \tilde{u}_{j+1}{\psi_{j+1}}(t)
+  %  \right)
+  %\right) dt = (f, \phi_j) \\
+  %\forall\; j&=1,\ldots,m, &\mathrm{a}(u_h, \psi_j) &= \int_0^1 \left( a(t) {\psi_j}'(t) \left(
+  %  u_{j-1}{\phi_{j-1}}'(t) +
+  %  u_{j}{\phi_{j}}'(t) +
+  %  \tilde{u}_{j}{\psi_{j}}'(t)
+  %  \right) + c(t) \psi_j(t) \left(
+  %  u_{j-1}{\phi_{j-1}}(t) +
+  %  u_{j}{\phi_{j}}(t) +
+  %  \tilde{u}_{j}{\psi_{j}}(t)
+  %  \right)
+  %\right) dt = (f, \psi_j) \\
+
+  \forall\; j&=1,\ldots,m-1, &\mathrm{a}(u_h, \phi_j) &= \mathrm{a}\left(
+    u_{j-1}{\phi_{j-1}} +
+    u_{j}{\phi_{j}} +
+    u_{j+1}{\phi_{j+1}} +
+    \tilde{u}_{j}{\psi_{j}} +
+    \tilde{u}_{j+1}{\psi_{j+1}},
+    \phi_j
+  \right) = (f, \phi_j) \\
+
+  \forall\; j&=1,\ldots,m, &\mathrm{a}(u_h, \psi_j) &= \mathrm{a}\left(
+    u_{j-1}{\phi_{j-1}} +
+    u_{j}{\phi_{j}} +
+    \tilde{u}_{j}{\psi_{j}},
+    \psi_j
+  \right) = (f, \psi_j) \\
+\end{align}
+```
+```math
+\iff
+```
+```math
+\begin{align}
+  \forall\; j&=1,\ldots,m-1, &u_{j-1}\mathrm{a}(\phi_{j-1}, \phi_{j}) +
+  u_{j}\mathrm{a}(\phi_{j}, \phi_{j}) +
+  u_{j+1}\mathrm{a}(\phi_{j+1}, \phi_{j}) +
+  \tilde{u}_{j}\mathrm{a}(\psi_{j}, \phi_{j}) +
+  \tilde{u}_{j+1}\mathrm{a}(\psi_{j+1}, \phi_{j}) = (f, \phi_j) \\
+
+  \forall\; j&=1,\ldots,m, &u_{j-1}\mathrm{a}(\phi_{j-1}, \psi_{j}) +
+  u_{j}\mathrm{a}(\phi_{j}, \psi_{j}) +
+  \tilde{u}_{j}\mathrm{a}(\psi_{j}, \phi_{j}) = (f, \psi_j)  \\
+\end{align}
+```
+```math
+\left(\text{With the understanding that } \phi_0 \equiv 0,\; \phi_{M-1} \equiv 0\right)
+```
+```math
+\iff
+```
+(We make ``B`` into the following ordered basis
+``\{\psi_1, \phi_1, \psi_2, \phi_2, \ldots, \psi_{m-1}, \phi_{m-1}, \psi_m\}``
+so that the nonzero entries of the matrix ``A``  ends up concentrate around the diagonal)
+```math
+\newcommand{\aphiphi}[2]{\mathrm{a}\left(\phi_{#1}, \phi_{#2}\right)}
+\newcommand{\aphipsi}[2]{\mathrm{a}\left(\phi_{#1}, \psi_{#2}\right)}
+\newcommand{\apsiphi}[2]{\mathrm{a}\left(\psi_{#1}, \phi_{#2}\right)}
+\newcommand{\apsipsi}[2]{\mathrm{a}\left(\psi_{#1}, \psi_{#2}\right)}
+\newcommand{\fpsi}[1]{\left(f, \psi_{#1}\right)}
+
+\begin{pmatrix}
+  \apsipsi{1}{1} & \aphipsi{1}{1} & \bullet        & \bullet        & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \apsiphi{1}{1} & \aphiphi{1}{1} & \apsiphi{2}{1} & \aphiphi{2}{1} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \aphipsi{1}{2} & \apsipsi{2}{2} & \aphipsi{2}{2} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \aphiphi{1}{2} & \apsiphi{2}{2} & \aphiphi{2}{2} & \apsiphi{3}{2} & \aphiphi{3}{2} & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \bullet        & \bullet        & \aphipsi{2}{3} & \apsipsi{3}{3} & \aphipsi{3}{3} & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \bullet        & \bullet        & \aphiphi{2}{3} & \apsiphi{3}{3} & \aphiphi{3}{3} & \apsiphi{4}{3} & \aphiphi{4}{3} & \bullet && \cdots && \bullet \\
+  \vdots         & \vdots         & \vdots         &                &                &                & \ddots         &&&&&& \vdots  \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &  \aphipsi{m-2}{m-1} & \apsipsi{m-1}{m-1} & \aphipsi{m-1}{m-1} & \bullet \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &\aphiphi{m-2}{m-1} & \apsiphi{m-1}{m-1} & \aphiphi{m-1}{m-1} & \apsiphi{m}{m-1} \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet & \bullet & \bullet & \aphipsi{m-1}{m} & \apsipsi{m}{m}
+\end{pmatrix}
+
+\begin{pmatrix}
+  \tilde{u}_1      \\
+  u_1              \\
+  \tilde{u}_2      \\
+  u_2              \\
+  \vdots           \\
+  \tilde{u}_{m-1}  \\
+  u_{m-1}          \\
+  \tilde{u}_m      \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+  \fpsi{1}    \\
+  \fphi{1}    \\
+  \fpsi{2}    \\
+  \fphi{2}    \\
+  \vdots      \\
+  \fpsi{m-1}  \\
+  \fphi{m-1}  \\
+  \fpsi{m}    \\
+\end{pmatrix}
+```
+
+
+
+
+One way to explain the tidiness is to observe that
+
+- When it comes to the row for ``(f, \psi_j)``, it is the term ``\tilde{u}_j`` which is the central term with one term ``u_{j-1}`` to its left and one term ``u_j`` to its right
+- When it comes to the row for ``(f, \phi_j)``, it is the term ``u_j`` which is the central term with two terms ``u_{j-1}, \tilde{u}_j`` to its left and two terms ``\tilde{u}_{j+1}, u_{j+1}`` to its right
+
+"""
+
+# ╔═╡ 3f514c89-9f56-4602-9032-7449ac63aef0
+function sombrero()
+  # Mexican hat; shape like our quadratic function.
+end
+
+# ╔═╡ 851c0911-18f0-4919-b8bd-5720d03d8191
+md"""
+```math
+\begin{pmatrix}
+  \apsipsi{1}{1} & \aphipsi{1}{1} & \bullet        & \bullet        & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \apsiphi{1}{1} & \aphiphi{1}{1} & \apsiphi{2}{1} & \aphiphi{2}{1} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \aphipsi{1}{2} & \apsipsi{2}{2} & \aphipsi{2}{2} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \aphiphi{1}{2} & \apsiphi{2}{2} & \aphiphi{2}{2} & \apsiphi{3}{2} & \aphiphi{3}{2} & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \bullet        & \bullet        & \aphipsi{2}{3} & \apsipsi{3}{3} & \aphipsi{3}{3} & \bullet & \bullet & \bullet && \cdots && \bullet \\
+  \bullet        & \bullet        & \bullet        & \aphiphi{2}{3} & \apsiphi{3}{3} & \aphiphi{3}{3} & \apsiphi{4}{3} & \aphiphi{4}{3} & \bullet && \cdots && \bullet \\
+  \vdots         & \vdots         & \vdots         &                &                &                & \ddots         &&&&&& \vdots  \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &  \aphipsi{m-2}{m-1} & \apsipsi{m-1}{m-1} & \aphipsi{m-1}{m-1} & \bullet \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &\aphiphi{m-2}{m-1} & \apsiphi{m-1}{m-1} & \aphiphi{m-1}{m-1} & \apsiphi{m}{m-1} \\
+  \bullet & \bullet & \bullet & & & & \cdots & & \bullet & \bullet & \aphipsi{m-1}{m} & \apsipsi{m}{m} & \aphipsi{m}{m}
+\end{pmatrix}
+```
+"""
 
 
 # ╔═╡ Cell order:
@@ -1013,3 +1183,5 @@ Một điều đáng chú ý là
 # ╟─bacca6c4-edbe-4eef-a9f9-d472b8360ff6
 # ╟─887b6cee-2dd3-43db-bc46-39a6e9945c44
 # ╠═68334b6e-e4df-42f3-823f-24438b3b61d9
+# ╠═3f514c89-9f56-4602-9032-7449ac63aef0
+# ╠═851c0911-18f0-4919-b8bd-5720d03d8191
