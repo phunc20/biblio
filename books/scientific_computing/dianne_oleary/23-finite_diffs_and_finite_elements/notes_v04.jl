@@ -1263,15 +1263,6 @@ function fe_quadratic(m::Number, a::Function, c::Function, f::Function)
   A, g
 end
 
-# ╔═╡ a99a0dfd-4e2f-4f2e-bab2-7deee689b016
-typeof(a_integral(t->1,t->0,ψ(10,5÷2+1),ψ(10,5÷2+1)))
-
-# ╔═╡ 873f34be-86ee-4b00-89df-cbc3646029c9
-typeof(f_integral(t->t,ψ(10,5÷2+1)))
-
-# ╔═╡ d2225532-9a98-431e-9255-605ad71f1f8c
-spdiagm(0 => [1,2,3])
-
 # ╔═╡ 7cda9daa-8cd1-4513-940e-254468a78466
 begin
   #M = 6
@@ -1291,20 +1282,47 @@ begin
   #end
 end
 
-# ╔═╡ 9c756cac-ec63-4695-8ef1-c940f8837b71
-typeof(AA)
-
-# ╔═╡ 45c29d94-2c96-416c-ba94-ffaa591bc324
-AAA = convert(SparseMatrixCSC{Float64,Int64}, AA)
-
-# ╔═╡ 55635baa-bb18-47d4-8b83-7c86e4bd67d7
-AAA \ gg
-
 # ╔═╡ a8e4bea6-d022-499b-9e3a-fb8bcb665c3b
 AA
 
 # ╔═╡ cfec4c37-ca99-43b1-bcb6-c892e5a76664
 gg
+
+# ╔═╡ 443f0745-fc81-4546-acc6-1444cdcb71d4
+md"""
+If we just ask `fe_quadratic` to return `A \ g`, Julia will complain
+```
+MethodError: no method matching lu!(::SparseArrays.SparseMatrixCSC{Real,Int64}, ::Val{true}; check=true)
+
+Closest candidates are:
+
+lu!(!Matched::StridedArray{T, 2}, ::Union{Val{false}, Val{true}}; check) where T<:Union{Complex{Float32}, Complex{Float64}, Float32, Float64} at /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.5/LinearAlgebra/src/lu.jl:79
+
+lu!(!Matched::Union{LinearAlgebra.Hermitian{T,S}, LinearAlgebra.Symmetric{T,S}} where S where T, ::Union{Val{false}, Val{true}}; check) at /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.5/LinearAlgebra/src/lu.jl:88
+
+lu!(!Matched::StridedArray{T, 2} where T, ::Union{Val{false}, Val{true}}; check) at /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.5/LinearAlgebra/src/lu.jl:130
+
+...
+
+#lu!#133(::Bool, ::typeof(LinearAlgebra.lu!), ::LinearAlgebra.Hermitian{Real,SparseArrays.SparseMatrixCSC{Real,Int64}}, ::Val{true})@lu.jl:90
+#lu#136(::Bool, ::typeof(LinearAlgebra.lu), ::LinearAlgebra.Hermitian{Real,SparseArrays.SparseMatrixCSC{Real,Int64}}, ::Val{true})@lu.jl:273
+lu(::LinearAlgebra.Hermitian{Real,SparseArrays.SparseMatrixCSC{Real,Int64}}, ::Val{true})@lu.jl:272
+\(::LinearAlgebra.Hermitian{Real,SparseArrays.SparseMatrixCSC{Real,Int64}}, ::Array{Float64,1})@generic.jl:1116
+\(::SparseArrays.SparseMatrixCSC{Real,Int64}, ::Array{Float64,1})@linalg.jl:1474
+fe_quadratic(::Int64, ::Function, ::Function, ::Function)@Other: 14
+top-level scope@Local: 7
+```
+
+It turned out that this is because the sparse array `A` was a
+`SparseMatrixCSC{Real,Int64}`. The backslash operation is not defined on
+this kind of data type. We can convert it to `SparseMatrixCSC{Float64,Int64}` as
+follows and `A \ g` will work. But,
+
+**(?)** Why would `fe_quadratic` return such a data type? We didn't ask it.
+
+**(R)** Found the culprit:
+The `uudiag` contains `0`'s and you write them as `0`, which will specify them as `Int` whereas nonzero entries along that diagonal will be `Float64`, forcing the array's data type become their common supertype, which is `Real`. We shall correct this and continue on `notes_v05.jl`
+"""
 
 # ╔═╡ c4ecfbb9-7247-4aed-88f9-98bcdbc099fe
 Array(AA)
@@ -1318,12 +1336,74 @@ inv(Array(AA)) * gg
 # ╔═╡ 02c5fb50-5751-4c4b-b498-707ceb593547
 Array(AA) \ gg
 
+# ╔═╡ 3680db22-4826-4270-a1d2-97613a476a62
+spdiagm(0 => [1,2,3])
+
+# ╔═╡ 2c1cdbde-4881-4c7e-9e91-20585bb52add
+typeof(a_integral(t->1,t->0,ψ(10,5÷2+1),ψ(10,5÷2+1)))
+
+# ╔═╡ f1e4bd18-bd9d-42a2-ac8a-9c05b343485a
+typeof(f_integral(t->t,ψ(10,5÷2+1)))
+
+# ╔═╡ 399bd4c9-e473-4a43-b667-a9dc4b990b15
+typeof(AA)
+
+# ╔═╡ 94a0501b-9497-4ce6-8529-c440c1cff9ca
+AAA = convert(SparseMatrixCSC{Float64,Int64}, AA)
+
+# ╔═╡ b42a890c-a5c3-4be6-bd5e-a6e415e0cc37
+AAA \ gg
+
+# ╔═╡ 28b44638-e8fd-4753-badc-d6293114f8b0
+Array(AA) \ gg
+
+# ╔═╡ e2a063bd-333f-4f36-b624-5e73071048f0
+let
+  m = 6 ÷ 2
+  a(t) = 1
+  c(t) = 0
+  f(t) = π^2 * sin(π*t)
+  rtol=1e-1
+  dim = 2*(m-1)+1
+  #g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1); rtol=rtol)[1] : f_integral(f, ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
+  #diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
+  #udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-1]
+  uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-2]
+  ## The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
+  #ldiag = udiag
+  #lldiag = uudiag
+  #A = spdiagm(-2 => lldiag, -1 => ldiag, 0 => diag, 1 => udiag, 2 => uudiag)
+  #typeof(diag), diag
+  #typeof(udiag), udiag
+  with_terminal() do
+    println("typeof(uudiag) = $(typeof(uudiag))")
+    #println("typeof(uudiag[1]) = $typeof(uudiag)")
+  end
+  # theoretical = [sin(π*t) for t in range(0,1;length=m+1)[2:end-1]]
+  # with_terminal() do
+  #   println("m = $m")
+  #   println("a(t) = 1")
+  #   println("c(t) = 0")
+  #   println("f(t) = π^2 * sin(π*t)")
+  #   println("fe_quadratic(M,a,c,f) =\n$numerical")
+  #   println("theoretical solution =\n$theoretical")
+  #end
+end
+
+# ╔═╡ b5ac8cc4-c02b-452e-96e2-134d4ad32647
+md"""
+<https://discourse.julialang.org/t/solving-sparse-matrix-using-backslash-got-methoderror-no-method-matching-lu/42906>
+"""
+
 # ╔═╡ c795164f-9794-4888-bcd9-b278e41bc511
 let
   A1 = sparse([1,1,2],[1,2,2],[1.0,2.0,3.0])
   b1 = sparsevec([2],[1.0])
   c1 = A1\b1
 end
+
+# ╔═╡ 3839dd3a-2530-4127-a4ce-a43ee99c325f
+Array(sparse([1,1,2],[1,2,2],[1.0,2.0,3.0]))
 
 # ╔═╡ 318f1cc5-e342-4e70-9f90-7f112b50e1dc
 let
@@ -1333,15 +1413,47 @@ end
 # ╔═╡ 31d3a1a5-5d60-420f-9b17-991dd0bac11f
 let
   A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
+  Array(A2)
+end
+
+# ╔═╡ 3eb33c12-2885-4b3a-8e8a-14a849dcf33c
+let
+  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,2.0,2.0,6.0])
+  Array(A2)
 end
 
 # ╔═╡ 08ac38e1-cf7b-4270-8692-8a3465acb9cc
 let
-  #A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,2.0,2.0,6.0])
-  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
-  b2 = sparsevec([2],[1.0])
+  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,2.0,2.0,6.0])
+  #A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
+  #b2 = sparsevec([2],[1.0])
+  b2 = [0; 1.0]
   c2 = A2\b2
+  #c2 = Array(A2) \ b2
+  #c2 = inv(Array(A2)) * b2
 end
+
+# ╔═╡ 91caf462-d281-4dfd-898a-b94029679627
+let
+  A = [1. 2.; 2. 6.]
+  b2 = sparsevec([2],[1.0])
+  A \ b2
+end
+
+# ╔═╡ 63b41aa8-3cdd-43c2-90ad-58d596e07c9c
+let
+  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,2.0,2.0,6.0])
+  #A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
+  b2 = sparsevec([2],[1.0])
+  #c2 = A2\b2
+  inv(Array(A2))
+end
+
+# ╔═╡ cd4eea32-8805-4875-8bbc-4f6c6729d9af
+
+
+# ╔═╡ f5e34d3c-6025-44ba-9ae0-13c45ea81c87
+
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -1409,20 +1521,30 @@ end
 # ╠═9fc0110f-6d17-49fb-9867-1b563e574566
 # ╠═9c16799b-7374-4736-870e-7ddc57441d75
 # ╠═a60842d0-badd-4398-acea-1d1e3bb0ff70
-# ╠═a99a0dfd-4e2f-4f2e-bab2-7deee689b016
-# ╠═873f34be-86ee-4b00-89df-cbc3646029c9
-# ╠═9c756cac-ec63-4695-8ef1-c940f8837b71
-# ╠═45c29d94-2c96-416c-ba94-ffaa591bc324
-# ╠═55635baa-bb18-47d4-8b83-7c86e4bd67d7
-# ╠═d2225532-9a98-431e-9255-605ad71f1f8c
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
 # ╠═a8e4bea6-d022-499b-9e3a-fb8bcb665c3b
 # ╠═cfec4c37-ca99-43b1-bcb6-c892e5a76664
+# ╟─443f0745-fc81-4546-acc6-1444cdcb71d4
 # ╠═c4ecfbb9-7247-4aed-88f9-98bcdbc099fe
 # ╠═6663cbb9-4f92-4ec5-a9bf-03b2a506c63b
 # ╠═7ddcba33-c621-4341-b18c-eb1d3d0e79ca
 # ╠═02c5fb50-5751-4c4b-b498-707ceb593547
+# ╠═3680db22-4826-4270-a1d2-97613a476a62
+# ╠═2c1cdbde-4881-4c7e-9e91-20585bb52add
+# ╠═f1e4bd18-bd9d-42a2-ac8a-9c05b343485a
+# ╠═399bd4c9-e473-4a43-b667-a9dc4b990b15
+# ╠═94a0501b-9497-4ce6-8529-c440c1cff9ca
+# ╠═b42a890c-a5c3-4be6-bd5e-a6e415e0cc37
+# ╠═28b44638-e8fd-4753-badc-d6293114f8b0
+# ╠═e2a063bd-333f-4f36-b624-5e73071048f0
+# ╟─b5ac8cc4-c02b-452e-96e2-134d4ad32647
 # ╠═c795164f-9794-4888-bcd9-b278e41bc511
+# ╠═3839dd3a-2530-4127-a4ce-a43ee99c325f
 # ╠═318f1cc5-e342-4e70-9f90-7f112b50e1dc
 # ╠═31d3a1a5-5d60-420f-9b17-991dd0bac11f
+# ╠═3eb33c12-2885-4b3a-8e8a-14a849dcf33c
 # ╠═08ac38e1-cf7b-4270-8692-8a3465acb9cc
+# ╠═91caf462-d281-4dfd-898a-b94029679627
+# ╠═63b41aa8-3cdd-43c2-90ad-58d596e07c9c
+# ╠═cd4eea32-8805-4875-8bbc-4f6c6729d9af
+# ╠═f5e34d3c-6025-44ba-9ae0-13c45ea81c87
