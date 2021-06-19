@@ -1259,26 +1259,88 @@ function fe_quadratic(m::Number, a::Function, c::Function, f::Function)
   A = spdiagm(-2 => lldiag, -1 => ldiag, 0 => diag, 1 => udiag, 2 => uudiag)
   #A = Tridiagonal(ldiag, diag, udiag)
   ## A * ucomp = g
-  ucomp = A \ g
+  #ucomp = A \ g
+  A, g
 end
 
+# ╔═╡ a99a0dfd-4e2f-4f2e-bab2-7deee689b016
+typeof(a_integral(t->1,t->0,ψ(10,5÷2+1),ψ(10,5÷2+1)))
+
+# ╔═╡ 873f34be-86ee-4b00-89df-cbc3646029c9
+typeof(f_integral(t->t,ψ(10,5÷2+1)))
+
+# ╔═╡ d2225532-9a98-431e-9255-605ad71f1f8c
+spdiagm(0 => [1,2,3])
+
 # ╔═╡ 7cda9daa-8cd1-4513-940e-254468a78466
+begin
+  #M = 6
+  m = 6 ÷ 2
+  aa(t) = 1
+  cc(t) = 0
+  ff(t) = π^2 * sin(π*t)
+  AA, gg = fe_quadratic(m, aa, cc, ff)
+  # theoretical = [sin(π*t) for t in range(0,1;length=m+1)[2:end-1]]
+  # with_terminal() do
+  #   println("m = $m")
+  #   println("a(t) = 1")
+  #   println("c(t) = 0")
+  #   println("f(t) = π^2 * sin(π*t)")
+  #   println("fe_quadratic(M,a,c,f) =\n$numerical")
+  #   println("theoretical solution =\n$theoretical")
+  #end
+end
+
+# ╔═╡ 9c756cac-ec63-4695-8ef1-c940f8837b71
+typeof(AA)
+
+# ╔═╡ 45c29d94-2c96-416c-ba94-ffaa591bc324
+AAA = convert(SparseMatrixCSC{Float64,Int64}, AA)
+
+# ╔═╡ 55635baa-bb18-47d4-8b83-7c86e4bd67d7
+AAA \ gg
+
+# ╔═╡ a8e4bea6-d022-499b-9e3a-fb8bcb665c3b
+AA
+
+# ╔═╡ cfec4c37-ca99-43b1-bcb6-c892e5a76664
+gg
+
+# ╔═╡ c4ecfbb9-7247-4aed-88f9-98bcdbc099fe
+Array(AA)
+
+# ╔═╡ 6663cbb9-4f92-4ec5-a9bf-03b2a506c63b
+inv(Array(AA))
+
+# ╔═╡ 7ddcba33-c621-4341-b18c-eb1d3d0e79ca
+inv(Array(AA)) * gg
+
+# ╔═╡ 02c5fb50-5751-4c4b-b498-707ceb593547
+Array(AA) \ gg
+
+# ╔═╡ c795164f-9794-4888-bcd9-b278e41bc511
 let
-  M = 6
-  m = M ÷ 2
-  a(t) = 1
-  c(t) = 0
-  f(t) = π^2 * sin(π*t)
-  numerical = fe_quadratic(m, a, c, f)
-  theoretical = [sin(π*t) for t in range(0,1;length=m+1)[2:end-1]]
-  with_terminal() do
-    println("m = $m")
-    println("a(t) = 1")
-    println("c(t) = 0")
-    println("f(t) = π^2 * sin(π*t)")
-    println("fe_quadratic(M,a,c,f) =\n$numerical")
-    println("theoretical solution =\n$theoretical")
-  end
+  A1 = sparse([1,1,2],[1,2,2],[1.0,2.0,3.0])
+  b1 = sparsevec([2],[1.0])
+  c1 = A1\b1
+end
+
+# ╔═╡ 318f1cc5-e342-4e70-9f90-7f112b50e1dc
+let
+  b2 = sparsevec([2],[1.0])
+end
+
+# ╔═╡ 31d3a1a5-5d60-420f-9b17-991dd0bac11f
+let
+  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
+end
+
+# ╔═╡ 08ac38e1-cf7b-4270-8692-8a3465acb9cc
+let
+  #A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,2.0,2.0,6.0])
+  A2 = sparse([1,1,2,2],[1,2,1,2],[1.0,0.0,0.0,1.0])
+  b2 = sparsevec([2],[1.0])
+  c2 = A2\b2
 end
 
 # ╔═╡ Cell order:
@@ -1347,4 +1409,20 @@ end
 # ╠═9fc0110f-6d17-49fb-9867-1b563e574566
 # ╠═9c16799b-7374-4736-870e-7ddc57441d75
 # ╠═a60842d0-badd-4398-acea-1d1e3bb0ff70
+# ╠═a99a0dfd-4e2f-4f2e-bab2-7deee689b016
+# ╠═873f34be-86ee-4b00-89df-cbc3646029c9
+# ╠═9c756cac-ec63-4695-8ef1-c940f8837b71
+# ╠═45c29d94-2c96-416c-ba94-ffaa591bc324
+# ╠═55635baa-bb18-47d4-8b83-7c86e4bd67d7
+# ╠═d2225532-9a98-431e-9255-605ad71f1f8c
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
+# ╠═a8e4bea6-d022-499b-9e3a-fb8bcb665c3b
+# ╠═cfec4c37-ca99-43b1-bcb6-c892e5a76664
+# ╠═c4ecfbb9-7247-4aed-88f9-98bcdbc099fe
+# ╠═6663cbb9-4f92-4ec5-a9bf-03b2a506c63b
+# ╠═7ddcba33-c621-4341-b18c-eb1d3d0e79ca
+# ╠═02c5fb50-5751-4c4b-b498-707ceb593547
+# ╠═c795164f-9794-4888-bcd9-b278e41bc511
+# ╠═318f1cc5-e342-4e70-9f90-7f112b50e1dc
+# ╠═31d3a1a5-5d60-420f-9b17-991dd0bac11f
+# ╠═08ac38e1-cf7b-4270-8692-8a3465acb9cc
