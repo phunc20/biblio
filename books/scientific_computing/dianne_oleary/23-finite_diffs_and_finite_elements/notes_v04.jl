@@ -846,7 +846,7 @@ function a_integrand(a::Function, c::Function, u::Function, v::Function)::Functi
 end
 
 # ╔═╡ 8a63ac98-62b9-48a7-8b48-6ab6b47259ca
-function a_integral(a::Function, c::Function, u::Function, v::Function, llim::Number, hlim::Number; rtol::Number=1e-8)
+function a_integral(a::Function, c::Function, u::Function, v::Function, llim::Number=0, hlim::Number=1; rtol::Number=1e-8)
   return quadgk(a_integrand(a,c,u,v), llim, hlim; rtol=rtol)
 end
 
@@ -855,7 +855,7 @@ begin
   function f_integrand(f::Function, v::Function)::Function
     return t -> f(t) * v(t)
   end
-  function f_integral(f::Function, v::Function, llim::Number, hlim::Number; rtol::Number=1e-8)
+  function f_integral(f::Function, v::Function, llim::Number=0, hlim::Number=1; rtol::Number=1e-8)
     return quadgk(f_integrand(f,v), llim, hlim; rtol=rtol)
   end
 end
@@ -863,12 +863,12 @@ end
 # ╔═╡ 449e92dc-7df0-42d3-b4f4-cd1916521832
 function fe_linear(M::Number, a::Function, c::Function, f::Function)
   #rtol = 1e-8
-  llim = 0
-  hlim = 1
-  g = [f_integral(f, ϕ(M,j), llim, hlim)[1] for j in 1:M-2]
-  diag = [a_integral(a,c,ϕ(M,j),ϕ(M,j),llim,hlim)[1] for j in 1:M-2]
+  #llim = 0
+  #hlim = 1
+  g = [f_integral(f, ϕ(M,j))[1] for j in 1:M-2]
+  diag = [a_integral(a,c,ϕ(M,j),ϕ(M,j))[1] for j in 1:M-2]
   # The matrix A is symmetric => udiag and ldiag are identical
-  ldiag = [a_integral(a,c,ϕ(M,j+1),ϕ(M,j),llim,hlim)[1] for j in 1:M-3]
+  ldiag = [a_integral(a,c,ϕ(M,j+1),ϕ(M,j))[1] for j in 1:M-3]
   udiag = ldiag
   A = spdiagm(-1 => ldiag, 0 => diag, 1 => udiag)
   #A = Tridiagonal(ldiag, diag, udiag)
@@ -942,9 +942,9 @@ trong đó ``\psi_{j}`` là một hàm quadratic (i.e. parabola) trên khoảng 
 # ╔═╡ 887b6cee-2dd3-43db-bc46-39a6e9945c44
 md"""
 ### CHALLENGE 23.6.
-Mục tiêu của challenge này là để viết một method `fe_quadratic` implement ý tưởng được đề xuất ở trên.
-Xong sau đó chúng ta sẽ so sánh kết quả của quadratic elements với linear elements để xem có phải
-nó thật sự đặt được kết quả gần hơn.
+Mục tiêu của challenge này là viết một method `fe_quadratic` implement ý tưởng được đề xuất ở trên.
+Sau đó chúng ta sẽ so sánh kết quả của quadratic elements với linear elements để xem có phải
+thật sự kết quả của quadratic elements gần với nghiệm hơn.
 
 Một điều đáng chú ý là
 > Để so sánh quadratic với linear, vì hai không gian ``S_h`` có dimension không tương động, nên chúng ta sẽ cố gắng sắp xét cho dimension tương động trước khi khởi hành việc so sánh. Đại loại đới với linear elements, chúng ta vẫn giữ nguyên việc cắt ``[0, 1]`` thành ``M-1`` phần, và lấy hat functions ``\phi_1, \ldots, \phi_{M-2}`` làm basis. Nhưng đối với quadratic elements, chúng ta sẽ cắt khoảng ``[0,1]`` thành ``m`` phần, trong đó ``m = \lfloor \frac{M}{2} \rfloor\,.`` Như vậy sẽ có ``m`` quadratic elements và ``m-1`` linear elements. Như vậy dimensions hai bên sẽ là `M-2` và ``2m-1``, là hai con số rất gần với nhau.
@@ -1196,6 +1196,73 @@ let
   )
 end
 
+# ╔═╡ a7cc4749-e5a9-4341-8c4c-5ccfc8d3d9ab
+md"""
+#### ``A`` is symmetric
+Kế tiếp chúng ta sẽ implement `fe_quadratic`. Có một quan sát có thể khiến cho implementation này dễ dàng hơn, đó là mat trận ``A`` ở trên, tuy có vể phức tặp, là symetric.
+
+_Proof._$(HTML("<br>"))
+It suffices to show
+- `udiag`
+  - ``A_{2k,\,2k+1} = A_{2k+1,\,2k} \quad\forall\; k=1,\ldots,m-1``
+  - ``A_{2k-1,\,2k} = A_{2k,\,2k-1} \quad\forall\; k=1,\ldots,m``
+- `uudiag`
+  - ``A_{2k,\,2k+2} = A_{2k+2,\,2k} \quad\forall\; k=1,\ldots,m-1``
+  - ``A_{2k-1,\,2k+1} = A_{2k+1,\,2k-1} \quad\forall\; k=1,\ldots,m``
+
+(To be continued)
+"""
+
+# ╔═╡ cc5ecaf4-33b2-4e39-bae4-4babb8e40970
+[1 for j in 1:10 if j % 2 == 0 else 0]  # This is Python-only syntax
+
+# ╔═╡ f97dce9a-46f0-4655-a860-dbbd4fc57915
+[j % 2 == 0 ? 1 : 0 for j in 1:10]
+
+# ╔═╡ 5b586f7a-00d6-4a8d-b48f-dc6289356a17
+iseven(2), isodd(2)
+
+# ╔═╡ 08d99833-65cb-406c-ad98-cd9c8666226f
+8 % 3, 7 % 3
+
+# ╔═╡ 9fc0110f-6d17-49fb-9867-1b563e574566
+methods(iseven)
+
+# ╔═╡ 9c16799b-7374-4736-870e-7ddc57441d75
+function fe_quadratic(m::Number, a::Function, c::Function, f::Function)
+  dim = 2*(m-1)+1
+  g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1))[1] : f_integral(f, ϕ(m+1,j÷2))[1] for j in 1:dim]
+  diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2))[1] for j in 1:dim]
+  udiag = [isodd(j) ? a_integral(a,c,ϕ(m,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ψ(m+1,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-1]
+  uudiag = [isodd(j) ? 0 : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-2]
+  # The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
+  ldiag = udiag
+  lldiag = uudiag
+  A = spdiagm(-2 => lldiag, -1 => ldiag, 0 => diag, 1 => udiag, 2 => uudiag)
+  #A = Tridiagonal(ldiag, diag, udiag)
+  ## A * ucomp = g
+  ucomp = A \ g
+end
+
+# ╔═╡ 7cda9daa-8cd1-4513-940e-254468a78466
+let
+  M = 6
+  m = M ÷ 2
+  a(t) = 1
+  c(t) = 0
+  f(t) = π^2 * sin(π*t)
+  numerical = fe_quadratic(M, a, c, f)
+  theoretical = [sin(π*t) for t in range(0,1;length=m+1)[2:end-1]]
+  with_terminal() do
+    println("m = $m")
+    println("a(t) = 1")
+    println("c(t) = 0")
+    println("f(t) = π^2 * sin(π*t)")
+    println("fe_quadratic(M,a,c,f) =\n$numerical")
+    println("theoretical solution =\n$theoretical")
+  end
+end
+
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
 # ╟─843498a2-c9c8-11eb-31a4-fb7bd7be2a89
@@ -1254,3 +1321,11 @@ end
 # ╠═851c0911-18f0-4919-b8bd-5720d03d8191
 # ╟─576d0de3-4bd5-4fbe-a32f-5221ab066a94
 # ╟─5dc63a04-0400-45dc-b73e-cbf5f4526980
+# ╟─a7cc4749-e5a9-4341-8c4c-5ccfc8d3d9ab
+# ╠═cc5ecaf4-33b2-4e39-bae4-4babb8e40970
+# ╠═f97dce9a-46f0-4655-a860-dbbd4fc57915
+# ╠═5b586f7a-00d6-4a8d-b48f-dc6289356a17
+# ╠═08d99833-65cb-406c-ad98-cd9c8666226f
+# ╠═9fc0110f-6d17-49fb-9867-1b563e574566
+# ╠═9c16799b-7374-4736-870e-7ddc57441d75
+# ╠═7cda9daa-8cd1-4513-940e-254468a78466
