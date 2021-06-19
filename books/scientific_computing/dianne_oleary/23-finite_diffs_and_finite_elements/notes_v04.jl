@@ -1106,28 +1106,95 @@ One way to explain the tidiness is to observe that
 """
 
 # ╔═╡ 3f514c89-9f56-4602-9032-7449ac63aef0
-function sombrero()
-  # Mexican hat; shape like our quadratic function.
+function sombrero(t::Number)
+  # Mexican hat; our basic quadratic function.
+  if t < -1
+    return 0
+  elseif t > 1
+    return 0
+  else
+    return 1 - t^2
+  end
 end
 
 # ╔═╡ 851c0911-18f0-4919-b8bd-5720d03d8191
-md"""
-```math
-\begin{pmatrix}
-  \apsipsi{1}{1} & \aphipsi{1}{1} & \bullet        & \bullet        & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
-  \apsiphi{1}{1} & \aphiphi{1}{1} & \apsiphi{2}{1} & \aphiphi{2}{1} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
-  \bullet        & \aphipsi{1}{2} & \apsipsi{2}{2} & \aphipsi{2}{2} & \bullet        & \bullet & \bullet & \bullet & \bullet && \cdots && \bullet \\
-  \bullet        & \aphiphi{1}{2} & \apsiphi{2}{2} & \aphiphi{2}{2} & \apsiphi{3}{2} & \aphiphi{3}{2} & \bullet & \bullet & \bullet && \cdots && \bullet \\
-  \bullet        & \bullet        & \bullet        & \aphipsi{2}{3} & \apsipsi{3}{3} & \aphipsi{3}{3} & \bullet & \bullet & \bullet && \cdots && \bullet \\
-  \bullet        & \bullet        & \bullet        & \aphiphi{2}{3} & \apsiphi{3}{3} & \aphiphi{3}{3} & \apsiphi{4}{3} & \aphiphi{4}{3} & \bullet && \cdots && \bullet \\
-  \vdots         & \vdots         & \vdots         &                &                &                & \ddots         &&&&&& \vdots  \\
-  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &  \aphipsi{m-2}{m-1} & \apsipsi{m-1}{m-1} & \aphipsi{m-1}{m-1} & \bullet \\
-  \bullet & \bullet & \bullet & & & & \cdots & & \bullet &\aphiphi{m-2}{m-1} & \apsiphi{m-1}{m-1} & \aphiphi{m-1}{m-1} & \apsiphi{m}{m-1} \\
-  \bullet & \bullet & \bullet & & & & \cdots & & \bullet & \bullet & \aphipsi{m-1}{m} & \apsipsi{m}{m} & \aphipsi{m}{m}
-\end{pmatrix}
-```
-"""
+function ψ(m::Int, j::Int)
+  if m <= 0
+    error("M must be a positive integer")
+  end
+  if j < 1 || j > m
+    error("j must be a positive integer in [1 .. m]")
+  end
+  h = 1 / m
+  midpoint = (j-1/2)*h
+  function intermediate(t::Number)
+    return 2 * (t - midpoint) / h
+  end
+  return sombrero ∘ intermediate
+end
 
+# ╔═╡ 576d0de3-4bd5-4fbe-a32f-5221ab066a94
+let
+  m = 4
+  alpha = 0.7
+  lw = 2
+  ts = range(0,1;length=700)
+  plot(ts,
+       ϕ(m+1,1).(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(-0.1, 1.1),
+       xticks=range(0,1;length=m+1),
+       yticks=range(0,1;length=m+1),
+       aspect_ratio=:equal,
+       label="ϕ1",
+       #legend=false,
+       legend=:bottomright,
+       background_color=:black,
+       title="m = $m\ns = ϕⱼ(t) and s=ψⱼ(t)",
+  )
+  plot!(ts,
+       ψ(m,1).(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       label="ψ1",
+  )
+  for j in 2:m
+    if j < m
+      plot!(ts,
+            ϕ(m+1,j).(ts),
+            linewidth=lw,
+            linealpha=alpha,
+            label="ϕ$(j)")
+    end
+    plot!(ts,
+          ψ(m,j).(ts),
+          linewidth=lw,
+          linealpha=alpha,
+          label="ψ$(j)")
+  end
+  plot!()
+end
+
+# ╔═╡ 5dc63a04-0400-45dc-b73e-cbf5f4526980
+let
+  alpha = 0.7
+  lw = 2
+  ts = range(-2,2;length=700)
+  plot(ts,
+       derivative(sombrero).(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(-2.1, 2.1),
+       #xticks=range(0,1;length=m+1),
+       #yticks=range(0,1;length=m+1),
+       #aspect_ratio=:equal,
+       label=false,
+       legend=false,
+       background_color=:black,
+       title="s = sombrero'(t)",
+  )
+end
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -1182,6 +1249,8 @@ md"""
 # ╠═1be5d29c-0be3-4ed5-84c6-cb7eafa44ffd
 # ╟─bacca6c4-edbe-4eef-a9f9-d472b8360ff6
 # ╟─887b6cee-2dd3-43db-bc46-39a6e9945c44
-# ╠═68334b6e-e4df-42f3-823f-24438b3b61d9
+# ╟─68334b6e-e4df-42f3-823f-24438b3b61d9
 # ╠═3f514c89-9f56-4602-9032-7449ac63aef0
 # ╠═851c0911-18f0-4919-b8bd-5720d03d8191
+# ╟─576d0de3-4bd5-4fbe-a32f-5221ab066a94
+# ╟─5dc63a04-0400-45dc-b73e-cbf5f4526980
