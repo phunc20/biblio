@@ -1229,12 +1229,30 @@ iseven(2), isodd(2)
 methods(iseven)
 
 # ╔═╡ 9c16799b-7374-4736-870e-7ddc57441d75
+# function fe_quadratic(m::Number, a::Function, c::Function, f::Function)
+#   rtol=1e-4
+#   dim = 2*(m-1)+1
+#   g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1))[1] : f_integral(f, ϕ(m+1,j÷2))[1] for j in 1:dim]
+#   diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2))[1] for j in 1:dim]
+#   udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-1]
+#   uudiag = [isodd(j) ? 0 : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-2]
+#   # The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
+#   ldiag = udiag
+#   lldiag = uudiag
+#   A = spdiagm(-2 => lldiag, -1 => ldiag, 0 => diag, 1 => udiag, 2 => uudiag)
+#   #A = Tridiagonal(ldiag, diag, udiag)
+#   ## A * ucomp = g
+#   ucomp = A \ g
+# end
+
+# ╔═╡ a60842d0-badd-4398-acea-1d1e3bb0ff70
 function fe_quadratic(m::Number, a::Function, c::Function, f::Function)
+  rtol=1e-1
   dim = 2*(m-1)+1
-  g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1))[1] : f_integral(f, ϕ(m+1,j÷2))[1] for j in 1:dim]
-  diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2))[1] for j in 1:dim]
-  udiag = [isodd(j) ? a_integral(a,c,ϕ(m,j÷2+1),ψ(m,j÷2+1))[1] : a_integral(a,c,ψ(m+1,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-1]
-  uudiag = [isodd(j) ? 0 : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2))[1] for j in 1:dim-2]
+  g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1); rtol=rtol)[1] : f_integral(f, ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
+  diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
+  udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-1]
+  uudiag = [isodd(j) ? 0 : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-2]
   # The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
   ldiag = udiag
   lldiag = uudiag
@@ -1251,7 +1269,7 @@ let
   a(t) = 1
   c(t) = 0
   f(t) = π^2 * sin(π*t)
-  numerical = fe_quadratic(M, a, c, f)
+  numerical = fe_quadratic(m, a, c, f)
   theoretical = [sin(π*t) for t in range(0,1;length=m+1)[2:end-1]]
   with_terminal() do
     println("m = $m")
@@ -1328,4 +1346,5 @@ end
 # ╠═08d99833-65cb-406c-ad98-cd9c8666226f
 # ╠═9fc0110f-6d17-49fb-9867-1b563e574566
 # ╠═9c16799b-7374-4736-870e-7ddc57441d75
+# ╠═a60842d0-badd-4398-acea-1d1e3bb0ff70
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
