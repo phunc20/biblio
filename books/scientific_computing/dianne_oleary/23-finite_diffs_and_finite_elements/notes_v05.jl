@@ -1355,8 +1355,11 @@ on such a toy problem? And why does the result appear to be worse than `fe_linea
 
 **(R)** I am not sure of the reason, but I have some guesses
 
-01. When we test the running time of `g`, `diag`, `udiag` and `uudiag`, we'd soon find out that only `udiag` and `uuidag` are time consuming. In any case, I find out that our `a_integral` and `f_integral`, when integrate with functions like `ϕ(M,j)` or `ψ(M,j)`, we **don't need to integrate over the entire ``[0, 1]`` interval**; instead, it suffices to integrate on the support of `ϕ(M,j)` or `ψ(M,j)`. And as the following shows, this indeed boost up the speed.
-
+01. When we test the running time of `g`, `diag`, `udiag` and `uudiag`, we'd soon find out that only `udiag` is time consuming. In any case, I find out that our `a_integral` and `f_integral`, when integrate with functions like `ϕ(M,j)` or `ψ(M,j)`, we **don't need to integrate over the entire ``[0, 1]`` interval**; instead, it suffices to integrate on the support of `ϕ(M,j)` or `ψ(M,j)`. And as the following shows, this indeed boost up the speed.
+  - On a modern CPU (2021/06/20) (`Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz`)
+    - `udiag`
+      - `424 s` when calculated on the whole interval ``[0,1]``
+      - `1.7s` when calculated only on the support
 Let's restart on `notes_v06.jl` to correct these. Besides, I'd also like to have `llim` and `hlim` as kw-args in `a_integral` and `f_integral`.
 """
 
@@ -1393,7 +1396,10 @@ let
 end
 
 # ╔═╡ cd4eea32-8805-4875-8bbc-4f6c6729d9af
+md"""
+**(?)** Why `g, diag, uudiag` don't need to specify the support in order to integrate fast? Actually, when the support is specified to integrate, it seems to even slow down the integration.
 
+"""
 
 # ╔═╡ f5e34d3c-6025-44ba-9ae0-13c45ea81c87
 
@@ -1469,5 +1475,5 @@ end
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
 # ╟─17a4a851-9f9d-49a0-bde1-2a7a7b791e64
 # ╠═e2a063bd-333f-4f36-b624-5e73071048f0
-# ╠═cd4eea32-8805-4875-8bbc-4f6c6729d9af
+# ╟─cd4eea32-8805-4875-8bbc-4f6c6729d9af
 # ╠═f5e34d3c-6025-44ba-9ae0-13c45ea81c87

@@ -1236,7 +1236,7 @@ end
 
 # ╔═╡ f1b9342d-123c-4f5e-8b34-d7a09b936b96
 md"""
-Giải thích:
+Giải thích vì sao đạo hàm giả trị lên tới `16` lận:
 ```math
 \begin{align}
 \psi_j(t)  &= 1 - \left( \frac{t - \left( t_{j-1} + \frac{h}{2} \right)}{\frac{h}{2}}  \right)^2 \\
@@ -1267,13 +1267,19 @@ It suffices to show
 # ╔═╡ a60842d0-badd-4398-acea-1d1e3bb0ff70
 function fe_quadratic(m::Number, a::Function, c::Function, f::Function;rtol::Number=1e-1)
   dim = 2*(m-1)+1
+  h = 1/m
+
+  ## For g, diag, and uudiag, it seems better to not specify the support.
+  ## But for udiag, it is necessary to specify the support in order to
+  ## have a reasonable speed of integration
   g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1); rtol=rtol)[1] : f_integral(f, ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
   diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
+
   #udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-1]
   udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1);llim=(j÷2)*h,hlim=(j÷2+1)*h,rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2);llim=(j÷2)*h,hlim=(j÷2+1)*h,rtol=rtol)[1] for j in 1:dim-1]
-  #udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1),(j÷2)*h,(j÷2+1)*h;rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2),(j÷2)*h,(j÷2+1)*h;rtol=rtol)[1] for j in 1:dim-1]
-  #uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-2]
-  uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2);llim=(j÷2)*h,hlim=(j÷2+1)*h,rtol=rtol)[1] for j in 1:dim-2]
+  
+  uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-2]
+  #uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2);llim=(j÷2)*h,hlim=(j÷2+1)*h,rtol=rtol)[1] for j in 1:dim-2]
 
   # The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
   ldiag = udiag
@@ -1322,46 +1328,13 @@ end
 
 # ╔═╡ 17a4a851-9f9d-49a0-bde1-2a7a7b791e64
 md"""
-**(?)** Why does it take such a long time to run the method `fe_quadratic`
-on such a toy problem? And why does the result appear to be worse than `fe_linear`?
+**(?)** Why does the result appear to be worse than `fe_linear`? Maybe `fe_quadratic` is worse at only those grid points ``t_{j}`` and is actually better in general? Please draw the graphs in order to compare btw them.
 
-**(R)** I am not sure of the reason for the slow run, but I have one guess
-
-- When we test the running time of `g`, `diag`, `udiag` and `uudiag`, we'd soon find out that only `udiag` and `uuidag` are time consuming. In any case, I find out that our `a_integral` and `f_integral`, when integrate with functions like `ϕ(M,j)` or `ψ(M,j)`, we **don't need to integrate over the entire ``[0, 1]`` interval**; instead, it suffices to integrate on the support of `ϕ(M,j)` or `ψ(M,j)`. And as the following shows, this indeed boost up the speed.
-
+**(R)**
 """
 
 # ╔═╡ e2a063bd-333f-4f36-b624-5e73071048f0
-let
-  m = 6 ÷ 2
-  h = 1 / m
-  a(t) = 1
-  c(t) = 0
-  f(t) = π^2 * sin(π*t)
-  rtol=1e-1
-  dim = 2*(m-1)+1
-  #g = [isodd(j) ? f_integral(f, ψ(m,j÷2+1); rtol=rtol)[1] : f_integral(f, ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
-  #diag = [isodd(j) ? a_integral(a,c,ψ(m,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ϕ(m+1,j÷2),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim]
 
-  udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1); rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-1]
-  #udiag = [isodd(j) ? a_integral(a,c,ϕ(m+1,j÷2+1),ψ(m,j÷2+1),(j÷2)*h,(j÷2+1)*h;rtol=rtol)[1] : a_integral(a,c,ψ(m,j÷2+1),ϕ(m+1,j÷2),(j÷2)*h,(j÷2+1)*h;rtol=rtol)[1] for j in 1:dim-1]
-
-  #uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2); rtol=rtol)[1] for j in 1:dim-2]
-  #uudiag = [isodd(j) ? 0. : a_integral(a,c,ϕ(m+1,j÷2+1),ϕ(m+1,j÷2),(j÷2)*h,(j÷2+1)*h; rtol=rtol)[1] for j in 1:dim-2]
-  ## The matrix A is symmetric => ldiag == udiag and lldiag == uudiag
-  #ldiag = udiag
-  #lldiag = uudiag
-  #A = spdiagm(-2 => lldiag, -1 => ldiag, 0 => diag, 1 => udiag, 2 => uudiag)
-  #typeof(diag), diag
-  #typeof(udiag), udiag
-  with_terminal() do
-    sth = udiag
-    println("typeof(sth) = $(typeof(sth))")
-    println("sth = $sth")
-    #rintln("typeof(uudiag) = $(typeof(uudiag))")
-    #println("typeof(uudiag[1]) = $typeof(uudiag)")
-  end
-end
 
 # ╔═╡ cd4eea32-8805-4875-8bbc-4f6c6729d9af
 
@@ -1434,7 +1407,7 @@ end
 # ╠═a60842d0-badd-4398-acea-1d1e3bb0ff70
 # ╠═8f61a91a-2ada-495b-9d1b-7d50d923a29a
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
-# ╠═17a4a851-9f9d-49a0-bde1-2a7a7b791e64
+# ╟─17a4a851-9f9d-49a0-bde1-2a7a7b791e64
 # ╠═e2a063bd-333f-4f36-b624-5e73071048f0
 # ╠═cd4eea32-8805-4875-8bbc-4f6c6729d9af
 # ╠═f5e34d3c-6025-44ba-9ae0-13c45ea81c87
