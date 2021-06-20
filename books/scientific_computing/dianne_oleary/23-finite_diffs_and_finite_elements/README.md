@@ -11,7 +11,10 @@ will bi `_c` in the future, meaning **concise**.
 
 
 ## Environment
-- To have the `TikzPictures`-drawn picture work on Debian, to my own experience, in addition to the standard TeX package, one need `sudo apt install texlive-luatex` as well.
-
+- Debian
+  - To have the `TikzPictures`-drawn picture work on Debian, to my own experience, in addition to the standard TeX package, one need `sudo apt install texlive-luatex` as well.
+- Fedora
+  - `sudo dnf install 'tex(standalone.cls)'`
+  - `sudo dnf install 'tex(luatex85.sty)'`
 
 
