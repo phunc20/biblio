@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.8
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -1333,14 +1333,97 @@ md"""
 **(R)**
 """
 
-# ╔═╡ e2a063bd-333f-4f36-b624-5e73071048f0
+# ╔═╡ 5a27efea-aa61-4607-88c0-46b42ce41c36
+md"""
+The following plot took place when I want to stuff two different `y`'s and one single `x` to `plot()` to see if that gives a shorthand for plotting multiple curves on one 2D plot. It turned out that this is the way to plot 3D.
+"""
 
+# ╔═╡ e2a063bd-333f-4f36-b624-5e73071048f0
+let
+  m = 4
+  alpha = 0.7
+  lw = 2
+  ts = range(0,1;length=500)
+  f(t) = π^2 * sin(π*t)
+  plot(ts,
+       f.(ts),
+       f.(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(-0.1, 1.1),
+       xticks=range(0,1;length=m+1),
+       yticks=range(0,1;length=m+1),
+       #aspect_ratio=:equal,
+       label="f",
+       #legend=false,
+       legend=:bottomright,
+       background_color=:black,
+       #title="m = $m\ns = ϕⱼ(t) and s=ψⱼ(t)",
+  )
+end
 
 # ╔═╡ cd4eea32-8805-4875-8bbc-4f6c6729d9af
-
+function fe_linear_post(coefficients::Array{Float64,1})
+  M = length(coefficients) + 2
+  function u_h(t::Number)
+    terms = [coefficients[j] * ϕ(M,j)(t) for j in 1:length(coefficients)]
+    linear_combination = reduce(+, terms)
+    return linear_combination
+  end
+  return u_h
+end
 
 # ╔═╡ f5e34d3c-6025-44ba-9ae0-13c45ea81c87
+let
+  M = 6
+  u(t) = sin(π*t)
+  alpha = 0.7
+  lw = 2
+  ts = range(0,1;length=500)
+  plot(ts,
+       u.(ts),
+       linealpha=alpha,
+       linewidth=lw,
+       xlim=(-0.1, 1.1),
+       xticks=range(0,1;length=M),
+       yticks=range(0,1;length=M),
+       #aspect_ratio=:equal,
+       label="u",
+       grid=true,
+       #legend=false,
+       legend=:topleft,
+       background_color=:black,
+       title="M = $M\nApprox: Quadratic vs Linear",
+  )
 
+  M = 6
+  #m = M ÷ 2 + M % 2
+  m = ceil(Int, M / 2)
+  a(t) = 1
+  c(t) = 0
+  f(t) = π^2 * sin(π*t)
+  linear_coeff = fe_linear(M, a, c, f)
+  quadratic_coeff = fe_quadratic(m, a, c, f)
+  u_linear = fe_linear_post(linear_coeff)
+  u_quadratic = fe_quadratic_post(quadratic_coeff)
+  plot!(ts,
+        u_linear.(ts),
+        linealpha=alpha,
+        linewidth=lw,
+        label="u_linear",
+  )
+  plot!(ts,
+        u_quadratic.(ts),
+        linealpha=alpha,
+        linewidth=lw,
+        label="u_quadratic",
+  )
+end
+
+# ╔═╡ 100b736e-ba69-4d50-9d25-929995d4afef
+md"""
+The above plot confirms the fact that `fe_linear` **only performs better on the sampled points** and reassures us of the correctness of our implementation for `fe_quadratic`.
+"""
 
 # ╔═╡ Cell order:
 # ╠═ffe1050f-57ed-4836-8bef-155a2ed17fbd
@@ -1408,6 +1491,8 @@ md"""
 # ╠═8f61a91a-2ada-495b-9d1b-7d50d923a29a
 # ╠═7cda9daa-8cd1-4513-940e-254468a78466
 # ╟─17a4a851-9f9d-49a0-bde1-2a7a7b791e64
-# ╠═e2a063bd-333f-4f36-b624-5e73071048f0
+# ╟─5a27efea-aa61-4607-88c0-46b42ce41c36
+# ╟─e2a063bd-333f-4f36-b624-5e73071048f0
 # ╠═cd4eea32-8805-4875-8bbc-4f6c6729d9af
 # ╠═f5e34d3c-6025-44ba-9ae0-13c45ea81c87
+# ╟─100b736e-ba69-4d50-9d25-929995d4afef
