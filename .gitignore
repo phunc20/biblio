@@ -3,4 +3,10 @@ jl_*/
 corbeille/
 trash.*
 
-
+# LaTeX
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
