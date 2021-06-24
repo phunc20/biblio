@@ -58,23 +58,21 @@ let
   md"""
 
   ```math
+  \newcommand{\qqquad}{\qquad\qquad\qquad\qquad\qquad\qquad\qquad}
   Ax = b
   ```
 
-  ``A =``
-
-  ``(``
+  ``\qqquad A = (``
   $(@bind a11 Scrubbable(δrange; format=".7f", default=δ))
   $(@bind a12 Scrubbable(range_; format=".2f", default=1.0))
   ``)``
 
-  ``(``
+  ``\phantom{\qqquad A =}(``
   $(@bind a21 Scrubbable(range_; format=".2f", default=1.0))
   $(@bind a22 Scrubbable(range_; format=".2f", default=1.0))
   ``)``
 
-  ``b =``
-  ``(``
+  ``\qqquad b = (``
   $(@bind b1 Scrubbable(range_; format=".2f", default=1.0))
   $(@bind b2 Scrubbable(range_; format=".2f", default=0.0))
   ``)^T``
@@ -103,20 +101,17 @@ let
   \hat{A}x = \hat{b}
   ```
 
-  ``\hat{A} =``
-
-  ``(``
+  ``\qqquad\hat{A} = (``
   $(@bind â11 Scrubbable(range_; format=".3f", default=0.661))
   $(@bind â12 Scrubbable(range_; format=".3f", default=0.991))
   ``)``
 
-  ``(``
+  ``\phantom{\qqquad\hat{A} =}(``
   $(@bind â21 Scrubbable(range_; format=".3f", default=0.500))
   $(@bind â22 Scrubbable(range_; format=".3f", default=0.750))
   ``)``
 
-  ``\hat{b} =``
-  ``(``
+  ``\qqquad\hat{b} = (``
   $(@bind b̂1 Scrubbable(range_; format=".3f", default=0.330))
   $(@bind b̂2 Scrubbable(range_; format=".3f", default=0.250))
   ``)^T``
@@ -221,7 +216,7 @@ end
 # ╠═7896a3ef-ff1f-4840-86c4-8ec2938936ed
 # ╠═ec6cddd4-e060-49c1-9080-cd254e0f3582
 # ╠═724c0e7a-8ec2-4f69-9142-5ecb4cb045b9
-# ╟─d9ce9c5d-cd96-478f-8efd-b0cf4cc0aca0
+# ╠═d9ce9c5d-cd96-478f-8efd-b0cf4cc0aca0
 # ╟─700b7e6c-ba99-4d83-9d43-5e8f6c9d4593
 # ╟─87915587-8625-4081-8178-2a5f22689088
 # ╠═c25b185b-76c7-4cd2-a62b-e326fd4bc2fd
