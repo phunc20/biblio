@@ -2,6 +2,7 @@
 jl_*/
 corbeille/
 trash.*
+.ipynb_checkpoints/
 
 # LaTeX
 *.aux
