@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.7
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -18,11 +18,13 @@ begin
   using Pkg
   #Pkg.activate(Base.Filesystem.homedir() * "/.config/julia/projects/oft")
   Pkg.activate("../../../../.julia_env/oft")
+  Pkg.add("PyCall")
   using Plots
   using PlutoUI
   #using LinearAlgebra
   using TikzPictures
   using LaTeXStrings
+  using PyCall
   #using SparseArrays
   #using Profile
   using BenchmarkTools
@@ -30,6 +32,68 @@ begin
   #using Flux
   #using Zygote: @adjoint
 end
+
+# ╔═╡ 1c82aec2-a0c2-474f-92b4-08d3c3e1426c
+md"""
+## 1.3$(HTML("&ensp;")) Computer Arithmetic
+"""
+
+# ╔═╡ 199c0271-c75a-4dc4-b8e8-737f50adcf88
+md"""
+**(?)** Reason why numbers like ``\frac{1}{10}``, ``\frac{1}{100}``, etc. cannot be expressed as a finite sum of powers of ``2``.
+
+```math
+\frac{1}{10} = \sum_{j=-k}^{k} a_{k} 2^{k} \iff
+\frac{1}{10} \cdot 2^{k} \cdot 10 = \left(\sum_{j=-k}^{k} a_{k} 2^{k}\right) \cdot 2^{k} \cdot 10 \iff
+2^{k} = 10 \cdot \text{sth}
+
+```
+
+"""
+
+# ╔═╡ 63b91e01-d3a8-4f57-ac8c-1c1760a62f49
+md"""
+- 提到 **fixed-point numbers** ``\implies`` 想到 **整數**
+- **computer word** ``\implies`` `4` bytes, i.e. `32` bits of `0`'s and `1`'s
+- ``x = \pm z \cdot 2^{p}``
+  - ``z``: **mantissa** / **significand**
+  - ``p``: **exponent**
+  - Normally, we **normalize** so that ``1 \le z \lt 2``.
+- **single-precision** numbers 的 single 指的是 single word, i.e. 用一個 word 來儲存一個 實數. 這對應到 Julia 的 `Float32`
+  - `24` bits 給 mantissa 揮動
+  - `8` bits 給 exponent: ``-126 \le p \le 127``.$(HTML("<br>"))
+    **(?)** Why the lower bound is ``-126`` instead of ``-128\,``? ``-127, -128`` 拿去作 ``\pm`` 正負號了?
+  - single-precision 所能表示的 **最小正數** 為 ``2^{-126} \approx 2^{-6}\cdot 10^{-36} \approx 0.0156 \cdot 10^{-36} = 1.56 \cdot 10^{-38}``
+  - single-precision 所能表示的 **最大正數** 接近 ``2^{128} \approx 2^{-6}\cdot 10^{-36} \approx 0.0156 \cdot 10^{-36} = 1.56 \cdot 10^{-38}``
+- 類似地, **double-precision** numbers 是由 兩個 words 組成, 理論上可以排列出 ``2^{64}`` 個不同的實數. Julia's `Float64`
+  - `53`-bit mantissa
+  - `11`-bit exponent: ``-1022 \le p \le 1023``
+  - **最小正數** ``\quad 2^{-1022}``
+  - **最大正數** ``\quad 2^{-1024}``
+
+"""
+
+# ╔═╡ 032d32fd-f0d7-4220-9381-38c55be70dda
+2^(-126)
+
+# ╔═╡ e0c7d733-2dd8-4b52-a798-ae484bca4988
+md"""
+**(?)** The ratio of numbers of bits distributed to mantissa and exponent are quite diff btw `Float32` and `Float64`. Any particular reasons?
+"""
+
+# ╔═╡ 674d5428-ffe6-4a3c-9ab2-be6a0288e377
+7 / 32, 10 / 64
+
+# ╔═╡ e59872f9-315e-4691-bcfb-09131a85b808
+0 / 0
+
+# ╔═╡ edf92f48-b728-41ef-9502-3e28a01e7a5b
+py"""
+0 / 0
+"""
+
+# ╔═╡ b82422a7-b28a-4fcf-998e-582e6c59bd86
+Float32
 
 # ╔═╡ ce66f0b6-d4ca-11eb-3d3a-79e2988c7492
 md"""
@@ -212,6 +276,15 @@ end
 
 # ╔═╡ Cell order:
 # ╠═26bd4dbe-b692-427a-acba-8e89544eeea6
+# ╠═1c82aec2-a0c2-474f-92b4-08d3c3e1426c
+# ╟─199c0271-c75a-4dc4-b8e8-737f50adcf88
+# ╟─63b91e01-d3a8-4f57-ac8c-1c1760a62f49
+# ╠═032d32fd-f0d7-4220-9381-38c55be70dda
+# ╟─e0c7d733-2dd8-4b52-a798-ae484bca4988
+# ╠═674d5428-ffe6-4a3c-9ab2-be6a0288e377
+# ╠═e59872f9-315e-4691-bcfb-09131a85b808
+# ╠═edf92f48-b728-41ef-9502-3e28a01e7a5b
+# ╠═b82422a7-b28a-4fcf-998e-582e6c59bd86
 # ╠═ce66f0b6-d4ca-11eb-3d3a-79e2988c7492
 # ╠═7896a3ef-ff1f-4840-86c4-8ec2938936ed
 # ╠═ec6cddd4-e060-49c1-9080-cd254e0f3582
