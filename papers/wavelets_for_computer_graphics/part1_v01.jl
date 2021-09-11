@@ -14,16 +14,16 @@ begin
   #   "PyCall",
   # ])
   # using PyCall
-  # using PyPlot
+  using PlutoUI
 end
 
 # ╔═╡ 6427478f-6f81-4311-8a50-6a3f56c2c7b3
 md"""
 The following two functions `decomp_step0` and `decomp0` are ephemere in the sense
-that, although they seem to give the correct numerical results, unlike in the paper
-they are _not_ inplace.
+that, although they seem to give the correct numerical results,
+they are _not_ inplace (unlike in the paper).
 
-We shall try to have an inplace version of them: `decomp_step0!` and `decomp0!`.
+Later on, we shall try to have an inplace version of them: `decomp_step0!` and `decomp0!`.
 """
 
 # ╔═╡ ae93f54b-b363-4630-b040-3ae4441f7356
@@ -49,34 +49,10 @@ function decomp0(c)
   return c
 end
 
-# ╔═╡ b9ddb9a5-9460-42eb-a273-3079977abefa
-typeof([1;
-	2;
-	3;
-	4;])
-
-# ╔═╡ 070a04b8-f7b9-4ee5-ab1e-f384c91eca60
-1:4
-
-# ╔═╡ 302f6825-4cba-4283-ae9d-a668b40f7f6e
-typeof(1:4)
-
-# ╔═╡ 7d997632-bfea-4a82-8346-08119b443ec8
-typeof(Array(1:4))
-
-# ╔═╡ f69d1431-0cd3-46dc-8979-cf698fb2f266
-size([1,2,3,4]), (4,)
-
-# ╔═╡ 8da15376-abb5-4e1c-9bf0-a0a0d4cb53f1
-[1 2 3 4], [1,2,3,4], [1;2;3;4]
-
-# ╔═╡ fc356833-4760-4183-8782-ce44411fa535
-typeof([1 2 3 4]), typeof([1,2,3,4]), typeof([1;2;3;4])
-
 # ╔═╡ 2a775497-2415-4d9d-87a9-794c3022e0c7
 let
   c = [9 7 3 5]
-  c = decomp0(c), [6, 2, 1/√2, -1/√2]
+  c = decomp0(c), [6 2 1/√2 -1/√2]
 end
 
 # ╔═╡ 2ac27421-041d-4f57-bba9-fb654a22035f
@@ -100,24 +76,141 @@ function decomp_step0!(c)
   c[:] = c′
 end
 
+# ╔═╡ 8e2fd3cd-e89a-481a-92aa-2f56b9c62787
+md"""
+Because this is error-prone, let's devise a test for our implementation of `decomp_test0!`
+"""
+
 # ╔═╡ d027e92c-b195-4faf-acc1-6737ea94ba71
 let
   c = [1. 2. 3. 4.]
   decomp_step0!(c)
-  c
+  c, [(1.0+2.0)/√2 (3.0+4.0)/√2 (1.0-2.0)/√2 (3.0-4.0)/√2]
 end
+
+# ╔═╡ 0db9da60-8158-4d16-9a8d-f1941d5bc208
+md"""
+Great. Our implementation seems to be correct.
+"""
 
 # ╔═╡ cbc6185f-a5a1-40fb-a943-bcf023b5074d
 function decomp0!(c)
   h = length(c)
-  #c /=  √h
-  c[:] ./=  √2
+  #c /=  √h  # It's bad to write this way, because it's no longer inplace.
+  c[:] /=  √h
   while h > 1
-    #c[1:h] = decomp_step0!(c[1:h])
+    #decomp_step0!(c[1:h])  # Similarly, this is not an inplace implementation.
     decomp_step0!(@view c[1:h])
     h ÷= 2
   end
-  #return c
+end
+
+# ╔═╡ 316f8b1f-dc83-416f-812d-ffa90d1ad6e6
+md"""
+Note that
+
+- instead of `c /=  √h`
+- we wrote  `c[:] /=  √h`
+
+and
+
+- instead of `decomp_step0!(c[1:h])`
+- we wrote  `decomp_step0!(@view c[1:h])`
+
+These are implementation details when we implement inplace/bang functions.
+
+**Rmk.**$(HTML("<br>"))
+I named this bang functions with a `0` at the end, because we might come up with even better implementations.
+"""
+
+# ╔═╡ a6f1deb3-d15c-47e2-a931-1065c9f2c267
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c[:] *= 2
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
+end
+
+# ╔═╡ b8d01a36-76c8-4df3-aa04-3a68801aa789
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c *= 2
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
+end
+
+# ╔═╡ 57367524-9778-44ea-a7cb-7f8fab678256
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c[:] .= 2
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
+end
+
+# ╔═╡ 8ed2ce7e-b78a-4e91-a934-b2b82a1111c8
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c .= 2
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
+end
+
+# ╔═╡ 4a1952ec-e796-4f58-ad54-62bd49d79dbd
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c[:] = fill(2, (4,))
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
+end
+
+# ╔═╡ 89ac02a7-6751-4c13-b15b-aa9d851b442b
+let
+  with_terminal() do
+    c = [1.,2.,3.,4.]
+    println("(Before)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c\n")
+
+    c = fill(2, (4,))
+    println("(After)")
+    println("objectid(c) = $(objectid(c))")
+    println("c = $c")
+  end
 end
 
 # ╔═╡ 314837c1-c5c1-4c48-9145-58e1feeb891d
@@ -192,28 +285,27 @@ let
 end
 
 # ╔═╡ 2c6d0915-8bc9-49a5-a87a-f24540c716e3
-let
-  c = [1.,2.,3.,4.]
-  c / 2 == c[:] ./ 2, c / 2 === c[:] ./ 2, c === c[:] ./ 2, c
-end
+
 
 # ╔═╡ Cell order:
 # ╠═91fb6596-f2b1-11eb-1498-093e78301b1f
 # ╟─6427478f-6f81-4311-8a50-6a3f56c2c7b3
 # ╠═ae93f54b-b363-4630-b040-3ae4441f7356
 # ╠═126d9209-12d6-4de6-ab31-783b5eb28d43
-# ╠═b9ddb9a5-9460-42eb-a273-3079977abefa
-# ╠═070a04b8-f7b9-4ee5-ab1e-f384c91eca60
-# ╠═302f6825-4cba-4283-ae9d-a668b40f7f6e
-# ╠═7d997632-bfea-4a82-8346-08119b443ec8
-# ╠═f69d1431-0cd3-46dc-8979-cf698fb2f266
-# ╠═8da15376-abb5-4e1c-9bf0-a0a0d4cb53f1
-# ╠═fc356833-4760-4183-8782-ce44411fa535
 # ╠═2a775497-2415-4d9d-87a9-794c3022e0c7
 # ╠═2ac27421-041d-4f57-bba9-fb654a22035f
 # ╠═3110e677-40e2-4473-ac6d-bdb8914c9528
+# ╟─8e2fd3cd-e89a-481a-92aa-2f56b9c62787
 # ╠═d027e92c-b195-4faf-acc1-6737ea94ba71
+# ╟─0db9da60-8158-4d16-9a8d-f1941d5bc208
 # ╠═cbc6185f-a5a1-40fb-a943-bcf023b5074d
+# ╟─316f8b1f-dc83-416f-812d-ffa90d1ad6e6
+# ╠═a6f1deb3-d15c-47e2-a931-1065c9f2c267
+# ╠═b8d01a36-76c8-4df3-aa04-3a68801aa789
+# ╠═57367524-9778-44ea-a7cb-7f8fab678256
+# ╠═8ed2ce7e-b78a-4e91-a934-b2b82a1111c8
+# ╠═4a1952ec-e796-4f58-ad54-62bd49d79dbd
+# ╠═89ac02a7-6751-4c13-b15b-aa9d851b442b
 # ╠═314837c1-c5c1-4c48-9145-58e1feeb891d
 # ╠═9819e5c3-2e76-423a-a6ce-9bc5e77f6d70
 # ╠═b54278c6-f31d-47a2-9090-635e34b4f491
