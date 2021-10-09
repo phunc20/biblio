@@ -10,106 +10,12 @@ begin
   using Plots
   using Images
   using Random
-  using ZipFile
-  using Downloads
 end
-
-# ╔═╡ 65aee38b-21c0-4fbc-a2fa-8dfcc0ca62f5
-md"""
-## Download The Dataset
-First, we download the dataset of 20 images mentioned in the paper. Actually, it was a dataset from another paper by some MIT professors.
-"""
-
-# ╔═╡ d8054dc2-fe29-4d68-aa20-b758c83af054
-# begin
-#   dirname = "imData1"
-#   if !isdir(dirname)
-#     url = "https://people.csail.mit.edu/taegsang/Documents/jigsawCode.zip"
-#     zip_filename = splitdir(url)[end]
-#     if !isfile(zip_filename)
-#       Downloads.download(url, zip_filename)
-#     end
-#     content = ZipFile.Reader(zip_filename)
-#   end
-#   content
-# end
-
-# ╔═╡ 95eb6779-cc40-4c74-ae76-74b2346443c5
-begin
-  dirname = "imData"
-  url = "https://people.csail.mit.edu/taegsang/Documents/jigsawCode.zip"
-  zip_filename = splitdir(url)[end]
-  if !isfile(zip_filename)
-    Downloads.download(url, zip_filename)
-  end
-  content = ZipFile.Reader(zip_filename)
-  content
-end
-
-# ╔═╡ 9815ad63-365b-45fd-960c-a8ee6a2ad18e
-content.files
-
-# ╔═╡ b685adcc-6c5f-4e02-bc77-38c416bf3d4d
-splitpath("jigsawCode/imData")
-
-# ╔═╡ bf847eea-141d-4089-b049-bc9183c67ae8
-begin
-  found = false
-  for file in content.files
-    if splitpath(file.name)[end] == "imData"
-      found = true
-    end
-  end
-  found
-end
-
-# ╔═╡ 60fdf5ac-ef39-4c50-b3aa-63e949e775ca
-md"""
-Cannot find `"imData"` because no string ends in that pattern.
-"""
-
-# ╔═╡ 63117d88-fc50-4cc6-9609-e3c32ce9f291
-# let
-#   for file in content.files
-#     if splitext(file.name)[end] == ".png"
-#       #img = load(file)
-#       open(file) do io
-#         img = load(io)
-#       end
-#       break
-#     end
-#   end
-#   img
-# end
-
-# ╔═╡ fa2a78aa-7ecb-4e7f-a082-efb827ff2bd8
-
-
-# ╔═╡ a35c1923-d7e6-48b6-926b-6f346d327587
-
-
-# ╔═╡ b12456cf-57d2-422f-9af0-23ee8375181e
-
-
-# ╔═╡ 43f2ac91-d064-47ba-a3cf-36347ba39f5b
-md"""
-I forgot which method to use when one wants to read an image file into a Julia array. Let's try `read`, `load`, etc.
-"""
-
-# ╔═╡ f3cf59e9-6104-4f35-9f16-49a13ee76ad4
-read("./imData/1.png")
-
-# ╔═╡ 2592753d-7db8-48bf-867c-d49c23256c66
-load("imData/1.png")
-
-# ╔═╡ 885cf57a-c853-4704-9bf8-cf0d65eaad7f
-md"""
-Ok, it's the `load` method.
-"""
 
 # ╔═╡ 0bc8a7f3-5b7a-483c-855a-044a0d681397
 md"""
-Next, we iterate through the directory `imData` reading and putting all the images into an array named `imgs`.
+# Mahalanobis Gradient Compatibility
+## Prepare The Data
 """
 
 # ╔═╡ 322292e4-c871-4e2a-90ed-aa175bcc0fc5
@@ -127,81 +33,8 @@ begin
   imgs
 end
 
-# ╔═╡ f8bf566d-9653-4497-8ec3-b015fcf4ac17
-md"""
-Next, we search to cut an image into square jigsaw pieces of side equal to `14` or `28` pixels.
-"""
-
-# ╔═╡ 467a06d5-b98d-4bb3-b285-5960c6be518b
-begin
-  img_id = 1
-  const P = 28
-  img = imgs[img_id]
-  failure = [img[1:P, 1:P] img[1:P, P+1:2P];
-             img[end-P+1:end, 1:P] img[end-P+1:end, P+1:2P]]
-end
-
-# ╔═╡ 7aa991f6-a091-49dd-893f-84256ac0349e
-typeof(failure)
-
-# ╔═╡ 376aa5b7-432b-4a98-b3b7-be219b5ed3f6
-size(failure)
-
-# ╔═╡ 7fc945d3-d097-47c5-8193-230a1e4484f3
-typeof(img), size(img)
-
-# ╔═╡ 150d99b7-4d74-4899-ae9b-dad396f2623a
-md"""
-We failed `failure` because we made it into the same type of array as `img` while what we really want was sth like `imgs`, i.e. an array of image patches.
-"""
-
-# ╔═╡ 40565539-cb25-4032-8505-d1670a115d27
-typeof(imgs)
-
-# ╔═╡ 877144fa-adb0-4547-9099-ae8a013ead25
-let
-  failure = Array{Any}(missing, 2, 2)
-  failure[1,1] = img[1:P, 1:P]
-  failure[1,2] = img[1:P, P+1:2P];
-  failure[2,1] = img[end-P+1:end, 1:P]
-  failure[2,2] = img[end-P+1:end, P+1:2P]
-  failure
-end
-
-# ╔═╡ c060ea03-54e5-4923-b198-17d466a0edf4
-let
-  failure = Array{Any}(missing, 2)
-  failure[1] = img[1:P, 1:P]
-  failure[2] = img[1:P, P+1:2P];
-  failure
-end
-
-# ╔═╡ 4aaf16de-d865-45d8-be32-e798c8a97558
-kk, pp = size(img)
-
-# ╔═╡ 48289df3-7157-42b1-b9bf-296b29909b97
-(kk)pp
-
-# ╔═╡ 15e22e8b-d64c-410b-87f2-782737124170
-@assert "C" in ("C", "F")
-
-# ╔═╡ 227810dd-8512-4e37-ba7e-690ffe025d81
-@assert "A" in ("C", "F")
-
-# ╔═╡ 98318cba-c675-4c99-8020-e779bebb5171
-# function cut(img, P)
-#   m, n = size(img)
-#   Kx, Ky = m ÷ P, n ÷ P
-#   K = Kx * Ky
-#   pieces = Array{Any}(missing, K)
-#   for i in 1:Kx, j in 1:Ky
-#     pieces[Ky*(i-1) + j] = img[(i-1)*P+1:i*P, (j-1)*P+1:j*P]
-#   end
-#   pieces, Kx, Ky
-# end
-
 # ╔═╡ c0c438d3-66a9-4a7a-aedb-bbb343fd9890
-function cut(img, P; order="C")
+function cut(img, P; order="F")
   @assert order in ("C", "F")
   m, n = size(img)
   Kx, Ky = m ÷ P, n ÷ P
@@ -213,106 +46,34 @@ function cut(img, P; order="C")
     end
   elseif order == "F"
     for j in 1:Ky, i in 1:Kx
-      #pieces[Kx*(j-1) + i] = img[(j-1)*P+1:j*P, (i-1)*P+1:i*P]
       pieces[Kx*(j-1) + i] = img[(i-1)*P+1:i*P, (j-1)*P+1:j*P]
     end
   end
   pieces, Kx, Ky
 end
 
-# ╔═╡ 57d7df68-bb04-446c-9ae7-6d9cc5c5d047
-cut(img, 28)
-
-# ╔═╡ 6b0f9b5a-89c6-4b7a-8599-47bd8fe13f6f
-let
-  pieces, Kx, Ky = cut(img, 28)
-  reshape(pieces, (Kx, Ky))
-end
-
-# ╔═╡ 5ec741ce-7ce7-4149-9920-9f721e93f23b
-md"""
-Ok, I denounce doing visualization this way. It seems that Pluto only display 1D array of images conveniently for us, and not 2D or nD arrays.
-
-Wait, we can still try
-- `reinterpret`
-- `Array{Matrix{RGB{N0f16}}}`
-"""
-
-# ╔═╡ 64795475-3791-4146-b069-678129aa93f3
-let
-  pieces, Kx, Ky = cut(img, 28)
-  reconstruct = reshape(pieces, (Kx, Ky))
-  reinterpret(Matrix{RGB{N0f16}}, reconstruct)
-end
-
-# ╔═╡ 723a273a-3de3-4998-a203-7fac45bf7e08
-let
-  pieces, Kx, Ky = cut(img, 28)
-  reconstruct = reshape(pieces, (Kx, Ky))
-  typeof(reconstruct)
-end
-
-# ╔═╡ 9ef9cbdb-9d6b-4134-85b9-5e373e21229f
-md"""
-`reinterpret` seems to not work...
-"""
+# ╔═╡ 61508fc5-d893-4a37-971e-a78ceaae0482
+puzzles = [cut(img, 28) for img in imgs]
 
 # ╔═╡ c24dc5e3-2469-40ca-b99a-1a232a027a13
 let
-  pieces, Kx, Ky = cut(img, 28)
+  pieces, Kx, Ky = puzzles[2]
   reconstruct = reshape(pieces, (Kx, Ky))
   Array{Matrix{RGB{N0f16}}}(reconstruct)
-end
-
-# ╔═╡ 4c63b0c5-e1f5-406a-bd9b-82ee4f59151b
-md"""
-Great! It works!
-
-Now, let's try to put the pieces in a different order so that the assembled picture looks like the original one.
-"""
-
-# ╔═╡ 0eb0b9fe-0e7c-4066-a7e2-c1728902c1a9
-let
-  pieces, Kx, Ky = cut(img, 28; order="F")
-  reconstruct = reshape(pieces, (Kx, Ky))
-  Array{Matrix{RGB{N0f16}}}(reconstruct)
-end
-
-# ╔═╡ 42c0992f-ced3-4997-a41b-1697efcf3975
-let
-  # Let's try a different P, say, P=14
-  pieces, Kx, Ky = cut(img, 14; order="F")
-  reconstruct = reshape(pieces, (Kx, Ky))
-  Array{Matrix{RGB{N0f16}}}(reconstruct)
-end
-
-# ╔═╡ 395d19a1-ffe6-46c2-946b-3fda7c4c505b
-md"""
-Let's try shuffle this.
-"""
-
-# ╔═╡ 4fbe2a6c-9691-4cf1-bfa5-552096643956
-let
-  pieces, Kx, Ky = cut(img, 28; order="F")
-  reconstruct = reshape(pieces, (Kx, Ky))
-  Array{Matrix{RGB{N0f16}}}(Random.shuffle(reconstruct))
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 Images = "~0.24.1"
 Plots = "~1.22.4"
 PlutoUI = "~0.7.14"
-ZipFile = "~0.9.4"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1485,12 +1246,6 @@ git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
 
-[[ZipFile]]
-deps = ["Libdl", "Printf", "Zlib_jll"]
-git-tree-sha1 = "3593e69e469d2111389a9bd06bac1f3d730ac6de"
-uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
-version = "0.9.4"
-
 [[Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
@@ -1554,50 +1309,11 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═513ac00e-26be-11ec-10bd-d31dce954e65
-# ╟─65aee38b-21c0-4fbc-a2fa-8dfcc0ca62f5
-# ╠═d8054dc2-fe29-4d68-aa20-b758c83af054
-# ╠═95eb6779-cc40-4c74-ae76-74b2346443c5
-# ╠═9815ad63-365b-45fd-960c-a8ee6a2ad18e
-# ╠═b685adcc-6c5f-4e02-bc77-38c416bf3d4d
-# ╠═bf847eea-141d-4089-b049-bc9183c67ae8
-# ╟─60fdf5ac-ef39-4c50-b3aa-63e949e775ca
-# ╠═63117d88-fc50-4cc6-9609-e3c32ce9f291
-# ╠═fa2a78aa-7ecb-4e7f-a082-efb827ff2bd8
-# ╠═a35c1923-d7e6-48b6-926b-6f346d327587
-# ╠═b12456cf-57d2-422f-9af0-23ee8375181e
-# ╟─43f2ac91-d064-47ba-a3cf-36347ba39f5b
-# ╠═f3cf59e9-6104-4f35-9f16-49a13ee76ad4
-# ╠═2592753d-7db8-48bf-867c-d49c23256c66
-# ╟─885cf57a-c853-4704-9bf8-cf0d65eaad7f
 # ╟─0bc8a7f3-5b7a-483c-855a-044a0d681397
 # ╠═322292e4-c871-4e2a-90ed-aa175bcc0fc5
 # ╠═586a4d23-d064-463b-8ed6-595af5e731e2
-# ╠═f8bf566d-9653-4497-8ec3-b015fcf4ac17
-# ╠═467a06d5-b98d-4bb3-b285-5960c6be518b
-# ╠═7aa991f6-a091-49dd-893f-84256ac0349e
-# ╠═376aa5b7-432b-4a98-b3b7-be219b5ed3f6
-# ╠═7fc945d3-d097-47c5-8193-230a1e4484f3
-# ╟─150d99b7-4d74-4899-ae9b-dad396f2623a
-# ╠═40565539-cb25-4032-8505-d1670a115d27
-# ╠═877144fa-adb0-4547-9099-ae8a013ead25
-# ╠═c060ea03-54e5-4923-b198-17d466a0edf4
-# ╠═4aaf16de-d865-45d8-be32-e798c8a97558
-# ╠═48289df3-7157-42b1-b9bf-296b29909b97
-# ╠═15e22e8b-d64c-410b-87f2-782737124170
-# ╠═227810dd-8512-4e37-ba7e-690ffe025d81
-# ╠═98318cba-c675-4c99-8020-e779bebb5171
 # ╠═c0c438d3-66a9-4a7a-aedb-bbb343fd9890
-# ╠═57d7df68-bb04-446c-9ae7-6d9cc5c5d047
-# ╠═6b0f9b5a-89c6-4b7a-8599-47bd8fe13f6f
-# ╟─5ec741ce-7ce7-4149-9920-9f721e93f23b
-# ╠═64795475-3791-4146-b069-678129aa93f3
-# ╠═723a273a-3de3-4998-a203-7fac45bf7e08
-# ╟─9ef9cbdb-9d6b-4134-85b9-5e373e21229f
+# ╠═61508fc5-d893-4a37-971e-a78ceaae0482
 # ╠═c24dc5e3-2469-40ca-b99a-1a232a027a13
-# ╟─4c63b0c5-e1f5-406a-bd9b-82ee4f59151b
-# ╠═0eb0b9fe-0e7c-4066-a7e2-c1728902c1a9
-# ╠═42c0992f-ced3-4997-a41b-1697efcf3975
-# ╟─395d19a1-ffe6-46c2-946b-3fda7c4c505b
-# ╠═4fbe2a6c-9691-4cf1-bfa5-552096643956
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
