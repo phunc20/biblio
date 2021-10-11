@@ -57,9 +57,273 @@ puzzles = [cut(img, 28) for img in imgs]
 
 # ╔═╡ c24dc5e3-2469-40ca-b99a-1a232a027a13
 let
-  pieces, Kx, Ky = puzzles[2]
+  pieces, Kx, Ky = puzzles[5]
   reconstruct = reshape(pieces, (Kx, Ky))
   Array{Matrix{RGB{N0f16}}}(reconstruct)
+end
+
+# ╔═╡ e5332b16-b8e9-4027-a133-45e827dab03f
+md"""
+Later on, we might be interested in shuffling the pieces in each puzzle. The two methods
+
+- `Random.shuffle`
+- and `Random.randperm`
+
+might come in handy.
+"""
+
+# ╔═╡ a21f2128-cb47-47ed-937b-0b40c1144aa4
+#@view puzzles[1][1][Random.randperm(18*24)]
+puzzles[1][1][Random.randperm(18*24)]
+
+# ╔═╡ 218e6b41-349f-4daf-817b-c65f4b12de06
+md"""
+## Aux Methods for MGC
+"""
+
+# ╔═╡ ba2623fb-3655-4939-ad24-300e0ee6866e
+function gradient0(piece; side="L")
+  @assert side in ("L", "R")
+  if side == "L"
+    piece[:,end] - piece[:,end-1]
+  else
+    piece[:,1] - piece[:,2]
+  end
+end
+
+# ╔═╡ 5e0e5b50-f1c1-49f9-a7fa-fce88298b731
+let
+  piece = puzzles[1][1][end] 
+  gradient0(piece)
+end
+
+# ╔═╡ 251fcad2-023e-4229-8dae-0e809dabe639
+let
+  piece = puzzles[1][1][end] 
+  size(gradient0(piece))
+end
+
+# ╔═╡ 4d8aa997-1287-44a9-a970-2c5bfe9dda9d
+let
+  piece = puzzles[1][1][end] 
+  typeof(gradient0(piece))
+end
+
+# ╔═╡ 91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
+md"""
+**(?)** Do we need to worry about `N0f16` overflow/underflow?
+"""
+
+# ╔═╡ c842f804-78e6-4712-b69c-81efe10f8b7e
+typemax(N0f16), typemin(N0f16)
+
+# ╔═╡ c6fcf04d-9884-498e-a375-f98cdcce49de
+let
+  x = typemin(N0f16)
+  x - 1
+end
+
+# ╔═╡ 3b1e926e-ad8d-496c-a6e1-7b31eaa9e19f
+let
+  x = typemin(N0f16)
+  typeof(x - 1)
+end
+
+# ╔═╡ e0bc193b-cd5f-423f-a368-fc682c4c7828
+md"""
+As a review as to how to manipulate `N0f16` and images in `Images.jl` in general, please refer to <https://juliaimages.org/latest/tutorials/quickstart/>
+"""
+
+# ╔═╡ 32d8a777-0d0b-4e00-a7ce-c02196490397
+let
+  x = typemin(N0f16)
+  N0f16(x - 1)
+end
+
+# ╔═╡ f378fb69-8608-42a3-8c33-a7e112688765
+md"""
+`N0f16` does not seem to have overflow/underflow issue. Nevertheless, `RGB` has.
+> When each of the RGB value is subtracted to below `0` (or augmented to above `1`), it will clip to `0` (or `1`, resp.)
+"""
+
+# ╔═╡ f015075d-c4ba-4e26-af0c-d1697fda1eeb
+RGB(0,0,0.9), RGB(0,0,0.9) - RGB(0,0,1)
+
+# ╔═╡ 88af2933-df27-4917-844a-bb4fa4b5192c
+RGB(1,0,0.7), RGB(1,0,0.7) - RGB(0,1,1)
+
+# ╔═╡ 33efe9db-d6cb-4fdb-abdf-d452d252eba5
+typeof(RGB)
+
+# ╔═╡ 4d1c9b36-b381-46e7-83d3-9213c94b9db5
+md"""
+As a result, the above `gradient0` method cannot serve as a correct implementation. Let's re-implement it.
+"""
+
+# ╔═╡ fc81b7ef-5236-41d3-b421-31b0e1f60d06
+let
+  piece = puzzles[1][1][end] 
+  reinterpret(Float32, piece)
+end
+
+# ╔═╡ e3162c5a-d9cc-465b-ab34-aafac6380ef2
+let
+  piece = puzzles[1][1][end] 
+  reinterpret(Float16, piece)
+end
+
+# ╔═╡ 6df7b1ef-9df4-4fd3-ad6b-bf563e5fbfef
+let
+  piece = puzzles[1][1][end] 
+  float(piece)
+end
+
+# ╔═╡ 3b6ea347-0608-416b-8789-e8ca66f8c580
+let
+  piece = puzzles[1][1][end] 
+  typeof(float(piece))
+end
+
+# ╔═╡ a39ecce8-92fa-4206-b3b7-c8148f226734
+function gradient1(piece; side="L")
+  @assert side in ("L", "R")
+  if side == "L"
+    float.(piece[:,end]) - float.(piece[:,end-1])
+  else
+    float.(piece[:,1]) - float.(piece[:,2])
+  end
+end
+
+# ╔═╡ 58b2d8fb-92c2-4e44-83fb-296ad639ed8b
+let
+  piece = puzzles[1][1][end] 
+  gradient1(piece)
+end
+
+# ╔═╡ ccf6fdd7-964c-431b-b9a6-8fa050ada3df
+md"""
+**(?)** How to inspect the pixel values?
+"""
+
+# ╔═╡ 6a41610d-ada6-4ebb-95b6-b7dd6237dc72
+let
+  piece = puzzles[1][1][end] 
+  typeof(gradient1(piece))
+end
+
+# ╔═╡ 4d8040d5-9c87-47f2-a1d1-17ac8f8a07e6
+let
+  piece = puzzles[1][1][end] 
+  display(MIME("text/plain"), gradient1(piece))
+end
+
+# ╔═╡ 35a7cd24-063c-4491-8534-a2bac9f45328
+dump(puzzles[1][1][end])
+
+# ╔═╡ d42c2706-87e6-455f-a16b-d09ebb1b892f
+typeof(puzzles[1][1][end])
+
+# ╔═╡ 2b001a3b-83bb-425b-a947-f882d5423f19
+let
+  piece = puzzles[1][1][end] 
+  channelview(gradient1(piece))
+end
+
+# ╔═╡ 5ccf506e-e6e7-46c8-8103-8e84dec2e2c1
+let
+  piece = puzzles[1][1][end] 
+  reinterpret(reshape, Float32, gradient1(piece))
+end
+
+# ╔═╡ c1b13d6b-9fbb-41ea-b41b-56df32cd2063
+let
+  piece = puzzles[1][1][end] 
+  channelview(piece[:, end]), channelview(piece[:, end-1])
+end
+
+# ╔═╡ 7c4fb0c4-e77e-4216-aa11-ec6ac7f6dd6c
+let
+  piece = puzzles[1][1][end] 
+  channelview(gradient0(piece))
+end
+
+# ╔═╡ 3c49dbef-5c48-4e10-866d-710d65cadc96
+md"""
+It seems that converting the entry type from `N0f16` to `Float32` resolves the underflow issue.
+"""
+
+# ╔═╡ 1fbc7426-5f9a-452c-b715-aa3d5bbbec28
+
+
+# ╔═╡ 2168b77d-06e1-4c80-8cb6-2e80099c7efb
+md"""
+### Mean and covariances
+"""
+
+# ╔═╡ 2dedc6af-4bc8-489f-bfc2-d831d91ed3b7
+let
+  piece = puzzles[1][1][end]
+  sum(gradient1(piece))
+end
+
+# ╔═╡ f5bdcc5a-dae7-41fb-9c9f-976c7f40d262
+let
+  piece = puzzles[1][1][end]
+  typeof(sum(gradient1(piece)))
+end
+
+# ╔═╡ 65c138b3-31ea-40e5-875b-ba5cd273e508
+methodswith(RGB)
+
+# ╔═╡ cc31bfc2-62e7-428c-b927-edba6d6204c9
+let
+  piece = puzzles[1][1][end]
+  somme = sum(gradient1(piece))
+  somme.r, somme.g, somme.b
+end
+
+# ╔═╡ ad02d04c-c344-454c-b58d-48d96d366a03
+red.(imgs[1])
+
+# ╔═╡ 546063e2-62e7-4839-910a-8c84f9cc1304
+function gradient2(piece; side="L")
+  @assert side in ("L", "R")
+  grad = if side == "L"
+           float.(piece[:,end]) - float.(piece[:,end-1])
+         else
+           float.(piece[:,1]) - float.(piece[:,2])
+         end
+  return channelview(grad)
+end
+
+# ╔═╡ 08a47def-87b4-460b-a6bf-b5f06c59220b
+let
+  piece = puzzles[1][1][end]
+  gradient2(piece)
+end
+
+# ╔═╡ e6eaeac0-bc7f-4879-b045-1f2ab8143b13
+let
+  piece = puzzles[1][1][end]
+  sum(gradient2(piece))
+end
+
+# ╔═╡ 064a47bf-33bf-4a4b-8cde-65809bb3dcea
+let
+  piece = puzzles[1][1][end]
+  sum(gradient2(piece), dims=2)
+end
+
+# ╔═╡ 4c234146-258f-4653-a5e5-917e0b0dc9c3
+function mean0(piece; side="L")
+  @assert side in ("L", "R")
+  sum(gradient2(piece; side=side), dims=2)
+end
+
+# ╔═╡ 75356436-79a8-48ca-bea1-ccab005a51d7
+let
+  piece = puzzles[1][1][end]
+  mean0(piece)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1315,5 +1579,52 @@ version = "0.9.1+5"
 # ╠═c0c438d3-66a9-4a7a-aedb-bbb343fd9890
 # ╠═61508fc5-d893-4a37-971e-a78ceaae0482
 # ╠═c24dc5e3-2469-40ca-b99a-1a232a027a13
+# ╟─e5332b16-b8e9-4027-a133-45e827dab03f
+# ╠═a21f2128-cb47-47ed-937b-0b40c1144aa4
+# ╟─218e6b41-349f-4daf-817b-c65f4b12de06
+# ╠═ba2623fb-3655-4939-ad24-300e0ee6866e
+# ╠═5e0e5b50-f1c1-49f9-a7fa-fce88298b731
+# ╠═251fcad2-023e-4229-8dae-0e809dabe639
+# ╠═4d8aa997-1287-44a9-a970-2c5bfe9dda9d
+# ╟─91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
+# ╠═c842f804-78e6-4712-b69c-81efe10f8b7e
+# ╠═c6fcf04d-9884-498e-a375-f98cdcce49de
+# ╠═3b1e926e-ad8d-496c-a6e1-7b31eaa9e19f
+# ╟─e0bc193b-cd5f-423f-a368-fc682c4c7828
+# ╠═32d8a777-0d0b-4e00-a7ce-c02196490397
+# ╟─f378fb69-8608-42a3-8c33-a7e112688765
+# ╠═f015075d-c4ba-4e26-af0c-d1697fda1eeb
+# ╠═88af2933-df27-4917-844a-bb4fa4b5192c
+# ╠═33efe9db-d6cb-4fdb-abdf-d452d252eba5
+# ╟─4d1c9b36-b381-46e7-83d3-9213c94b9db5
+# ╠═fc81b7ef-5236-41d3-b421-31b0e1f60d06
+# ╠═e3162c5a-d9cc-465b-ab34-aafac6380ef2
+# ╠═6df7b1ef-9df4-4fd3-ad6b-bf563e5fbfef
+# ╠═3b6ea347-0608-416b-8789-e8ca66f8c580
+# ╠═a39ecce8-92fa-4206-b3b7-c8148f226734
+# ╠═58b2d8fb-92c2-4e44-83fb-296ad639ed8b
+# ╟─ccf6fdd7-964c-431b-b9a6-8fa050ada3df
+# ╠═6a41610d-ada6-4ebb-95b6-b7dd6237dc72
+# ╠═4d8040d5-9c87-47f2-a1d1-17ac8f8a07e6
+# ╠═35a7cd24-063c-4491-8534-a2bac9f45328
+# ╠═d42c2706-87e6-455f-a16b-d09ebb1b892f
+# ╠═2b001a3b-83bb-425b-a947-f882d5423f19
+# ╠═5ccf506e-e6e7-46c8-8103-8e84dec2e2c1
+# ╠═c1b13d6b-9fbb-41ea-b41b-56df32cd2063
+# ╠═7c4fb0c4-e77e-4216-aa11-ec6ac7f6dd6c
+# ╟─3c49dbef-5c48-4e10-866d-710d65cadc96
+# ╠═1fbc7426-5f9a-452c-b715-aa3d5bbbec28
+# ╟─2168b77d-06e1-4c80-8cb6-2e80099c7efb
+# ╠═2dedc6af-4bc8-489f-bfc2-d831d91ed3b7
+# ╠═f5bdcc5a-dae7-41fb-9c9f-976c7f40d262
+# ╠═65c138b3-31ea-40e5-875b-ba5cd273e508
+# ╠═cc31bfc2-62e7-428c-b927-edba6d6204c9
+# ╠═ad02d04c-c344-454c-b58d-48d96d366a03
+# ╠═546063e2-62e7-4839-910a-8c84f9cc1304
+# ╠═08a47def-87b4-460b-a6bf-b5f06c59220b
+# ╠═e6eaeac0-bc7f-4879-b045-1f2ab8143b13
+# ╠═064a47bf-33bf-4a4b-8cde-65809bb3dcea
+# ╠═4c234146-258f-4653-a5e5-917e0b0dc9c3
+# ╠═75356436-79a8-48ca-bea1-ccab005a51d7
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
