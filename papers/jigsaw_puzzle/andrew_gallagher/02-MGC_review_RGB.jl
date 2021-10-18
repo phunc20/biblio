@@ -67,7 +67,7 @@ md"""
 Later on, we might be interested in shuffling the pieces in each puzzle. The two methods
 
 - `Random.shuffle`
-- and `Random.randperm`
+- `Random.randperm`
 
 might come in handy.
 """
@@ -91,6 +91,11 @@ function gradient0(piece; side="L")
   end
 end
 
+# ╔═╡ b8a2795f-386e-41b1-881f-d03250b95009
+let
+  piece = puzzles[1][1][end]
+end
+
 # ╔═╡ 5e0e5b50-f1c1-49f9-a7fa-fce88298b731
 let
   piece = puzzles[1][1][end] 
@@ -111,7 +116,7 @@ end
 
 # ╔═╡ 91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
 md"""
-**(?)** Do we need to worry about `N0f16` overflow/underflow?
+**(?)** Do we need to worry about `N0f16` overflow/underflow?$(HTML("<br>"))
 """
 
 # ╔═╡ c842f804-78e6-4712-b69c-81efe10f8b7e
@@ -120,13 +125,7 @@ typemax(N0f16), typemin(N0f16)
 # ╔═╡ c6fcf04d-9884-498e-a375-f98cdcce49de
 let
   x = typemin(N0f16)
-  x - 1
-end
-
-# ╔═╡ 3b1e926e-ad8d-496c-a6e1-7b31eaa9e19f
-let
-  x = typemin(N0f16)
-  typeof(x - 1)
+  x - 1, typeof(x-1)
 end
 
 # ╔═╡ e0bc193b-cd5f-423f-a368-fc682c4c7828
@@ -142,7 +141,9 @@ end
 
 # ╔═╡ f378fb69-8608-42a3-8c33-a7e112688765
 md"""
-`N0f16` does not seem to have overflow/underflow issue. Nevertheless, `RGB` has.
+**(R)** `N0f16` does not seem to have overflow/underflow issue -- when we surpass its min/max, we simply step into `float32`.
+
+Nevertheless, `RGB` has to worry about overflow/underflow.
 > When each of the RGB value is subtracted to below `0` (or augmented to above `1`), it will clip to `0` (or `1`, resp.)
 """
 
@@ -155,9 +156,32 @@ RGB(1,0,0.7), RGB(1,0,0.7) - RGB(0,1,1)
 # ╔═╡ 33efe9db-d6cb-4fdb-abdf-d452d252eba5
 typeof(RGB)
 
+# ╔═╡ 5604cac5-e5e7-4254-8001-da7491fb3e80
+typeof(RGB(0,0,-0.1)), typeof(RGB(0,0,0.9)), typeof(RGB(0,0,1))
+
+# ╔═╡ ba549fb1-823e-4e53-b7fa-aec4587a2e81
+RGB(0,0,0.9) - RGB(0,0,1) == RGB(0,0,0)
+
+# ╔═╡ 7f24587f-eeaf-4a58-896a-d71c88159134
+RGB(0,0,0.9) - RGB(0,0,1) == RGB(0,0,0.9-1)
+
+# ╔═╡ 90d6b4eb-bdc0-4208-8b58-d54f9e928431
+typeof(RGB(0,0,0.9) - RGB(0,0,1))
+
+# ╔═╡ 38a8fd0f-031b-4319-90fd-fa22b59bd40a
+RGB(-0.9,-0.9,-0.9), RGB(1,1,0) + RGB(1,0,1)
+
+# ╔═╡ eb746689-50c2-4d95-b5c5-6fd7056ce49f
+md"""
+Although `RGB(0,0,100)` is prohibited, `RGB(0,0,100.0)` is allowed.
+"""
+
+# ╔═╡ 7329d748-28df-465b-8ac3-7acb75565ab3
+RGB(0,0,100.0)
+
 # ╔═╡ 4d1c9b36-b381-46e7-83d3-9213c94b9db5
 md"""
-As a result, the above `gradient0` method cannot serve as a correct implementation. Let's re-implement it.
+As a result, the above `gradient0` method cannot faithfully reflect the difference color. Let's re-implement it.
 """
 
 # ╔═╡ fc81b7ef-5236-41d3-b421-31b0e1f60d06
@@ -199,6 +223,49 @@ let
   piece = puzzles[1][1][end] 
   gradient1(piece)
 end
+
+# ╔═╡ f9a3f8ca-3892-4186-82d7-fa359fb9593b
+md"""
+**(?)** Explain the color difference you observed btw `gradient1(piece)` and `gradient0(piece)`.
+"""
+
+# ╔═╡ b37e2a98-472d-45ca-bf27-2456b261ade4
+let
+  piece = puzzles[1][1][end]
+  piece[:, end], piece[:, end-1]
+end
+
+# ╔═╡ d45716aa-43c5-4cda-85f2-f7c73eb738f1
+let
+  piece = puzzles[1][1][end]
+  piece[:, end] - piece[:, end-1]
+end
+
+# ╔═╡ 57620bd2-4fcd-4a71-adf3-f8dc9a9c7681
+let
+  piece = puzzles[1][1][end]
+  typeof(piece[:, end] - piece[:, end-1])
+end
+
+# ╔═╡ d145f876-1b70-4a28-9dc7-a55f3f6ee166
+N0f16(0.9) - N0f16(1)
+
+# ╔═╡ 2fbc4daa-2d96-4f52-a192-0b9c9ec2cb67
+md"""
+I was wrong: `N0f16` has overflow/underflow issues, like the cell above shows.
+
+"""
+
+# ╔═╡ 85ff0504-0280-491f-b67e-5080dac0afb4
+RGB(N0f16(0),N0f16(0),N0f16(0.5)) - RGB(0,0,1)
+
+# ╔═╡ 6b8c4b44-77e5-463e-b03d-4b9f9e9818e3
+typeof(RGB(N0f16(0),N0f16(0),N0f16(0.5)) - RGB(0,0,1))
+
+# ╔═╡ c14df2f0-0669-48ea-81bd-4a699f877db9
+md"""
+This explains the color difference btw `gradient0(piece)` and `gradient1(piece)` and also shows that `gradient1(piece)` is an implementation free of overflow/underflow worries.
+"""
 
 # ╔═╡ ccf6fdd7-964c-431b-b9a6-8fa050ada3df
 md"""
@@ -312,6 +379,30 @@ end
 let
   piece = puzzles[1][1][end]
   sum(gradient2(piece), dims=2)
+end
+
+# ╔═╡ 99526371-3de1-447e-9dc5-f58f8ae4f024
+let
+  piece = puzzles[1][1][end]
+  sum(gradient1(piece), dims=2)
+end
+
+# ╔═╡ ae4af2e8-334f-4fca-bc1e-df34c1d15493
+let
+  piece = puzzles[1][1][end]
+  typeof(gradient1(piece))
+end
+
+# ╔═╡ c89f1e87-a39b-416c-96d3-6e6e9bb83839
+let
+  piece = puzzles[1][1][end]
+  sum(gradient1(piece), dims=2) == gradient1(piece)
+end
+
+# ╔═╡ 833e9951-ceb9-49a0-8c56-2ad060754a9c
+let
+  piece = puzzles[1][1][end]
+  sum(gradient1(piece), dims=1)
 end
 
 # ╔═╡ 4c234146-258f-4653-a5e5-917e0b0dc9c3
@@ -1583,19 +1674,26 @@ version = "0.9.1+5"
 # ╠═a21f2128-cb47-47ed-937b-0b40c1144aa4
 # ╟─218e6b41-349f-4daf-817b-c65f4b12de06
 # ╠═ba2623fb-3655-4939-ad24-300e0ee6866e
+# ╠═b8a2795f-386e-41b1-881f-d03250b95009
 # ╠═5e0e5b50-f1c1-49f9-a7fa-fce88298b731
 # ╠═251fcad2-023e-4229-8dae-0e809dabe639
 # ╠═4d8aa997-1287-44a9-a970-2c5bfe9dda9d
 # ╟─91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
 # ╠═c842f804-78e6-4712-b69c-81efe10f8b7e
 # ╠═c6fcf04d-9884-498e-a375-f98cdcce49de
-# ╠═3b1e926e-ad8d-496c-a6e1-7b31eaa9e19f
 # ╟─e0bc193b-cd5f-423f-a368-fc682c4c7828
 # ╠═32d8a777-0d0b-4e00-a7ce-c02196490397
 # ╟─f378fb69-8608-42a3-8c33-a7e112688765
 # ╠═f015075d-c4ba-4e26-af0c-d1697fda1eeb
 # ╠═88af2933-df27-4917-844a-bb4fa4b5192c
 # ╠═33efe9db-d6cb-4fdb-abdf-d452d252eba5
+# ╠═5604cac5-e5e7-4254-8001-da7491fb3e80
+# ╠═ba549fb1-823e-4e53-b7fa-aec4587a2e81
+# ╠═7f24587f-eeaf-4a58-896a-d71c88159134
+# ╠═90d6b4eb-bdc0-4208-8b58-d54f9e928431
+# ╠═38a8fd0f-031b-4319-90fd-fa22b59bd40a
+# ╟─eb746689-50c2-4d95-b5c5-6fd7056ce49f
+# ╠═7329d748-28df-465b-8ac3-7acb75565ab3
 # ╟─4d1c9b36-b381-46e7-83d3-9213c94b9db5
 # ╠═fc81b7ef-5236-41d3-b421-31b0e1f60d06
 # ╠═e3162c5a-d9cc-465b-ab34-aafac6380ef2
@@ -1603,6 +1701,15 @@ version = "0.9.1+5"
 # ╠═3b6ea347-0608-416b-8789-e8ca66f8c580
 # ╠═a39ecce8-92fa-4206-b3b7-c8148f226734
 # ╠═58b2d8fb-92c2-4e44-83fb-296ad639ed8b
+# ╟─f9a3f8ca-3892-4186-82d7-fa359fb9593b
+# ╠═b37e2a98-472d-45ca-bf27-2456b261ade4
+# ╠═d45716aa-43c5-4cda-85f2-f7c73eb738f1
+# ╠═57620bd2-4fcd-4a71-adf3-f8dc9a9c7681
+# ╠═d145f876-1b70-4a28-9dc7-a55f3f6ee166
+# ╟─2fbc4daa-2d96-4f52-a192-0b9c9ec2cb67
+# ╠═85ff0504-0280-491f-b67e-5080dac0afb4
+# ╠═6b8c4b44-77e5-463e-b03d-4b9f9e9818e3
+# ╟─c14df2f0-0669-48ea-81bd-4a699f877db9
 # ╟─ccf6fdd7-964c-431b-b9a6-8fa050ada3df
 # ╠═6a41610d-ada6-4ebb-95b6-b7dd6237dc72
 # ╠═4d8040d5-9c87-47f2-a1d1-17ac8f8a07e6
@@ -1624,6 +1731,10 @@ version = "0.9.1+5"
 # ╠═08a47def-87b4-460b-a6bf-b5f06c59220b
 # ╠═e6eaeac0-bc7f-4879-b045-1f2ab8143b13
 # ╠═064a47bf-33bf-4a4b-8cde-65809bb3dcea
+# ╠═99526371-3de1-447e-9dc5-f58f8ae4f024
+# ╠═ae4af2e8-334f-4fca-bc1e-df34c1d15493
+# ╠═c89f1e87-a39b-416c-96d3-6e6e9bb83839
+# ╠═833e9951-ceb9-49a0-8c56-2ad060754a9c
 # ╠═4c234146-258f-4653-a5e5-917e0b0dc9c3
 # ╠═75356436-79a8-48ca-bea1-ccab005a51d7
 # ╟─00000000-0000-0000-0000-000000000001
