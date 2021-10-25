@@ -78,7 +78,7 @@ puzzles[1][1][Random.randperm(18*24)]
 
 # ╔═╡ 218e6b41-349f-4daf-817b-c65f4b12de06
 md"""
-## Aux Methods for MGC
+## Auxiliary Methods for MGC
 """
 
 # ╔═╡ ba2623fb-3655-4939-ad24-300e0ee6866e
@@ -108,94 +108,6 @@ let
   size(gradient0(piece))
 end
 
-# ╔═╡ 4d8aa997-1287-44a9-a970-2c5bfe9dda9d
-let
-  piece = puzzles[1][1][end] 
-  typeof(gradient0(piece))
-end
-
-# ╔═╡ 91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
-md"""
-**(?)** Do we need to worry about `N0f16` overflow/underflow?$(HTML("<br>"))
-"""
-
-# ╔═╡ c842f804-78e6-4712-b69c-81efe10f8b7e
-typemax(N0f16), typemin(N0f16)
-
-# ╔═╡ c6fcf04d-9884-498e-a375-f98cdcce49de
-let
-  x = typemin(N0f16)
-  x - 1, typeof(x-1)
-end
-
-# ╔═╡ e0bc193b-cd5f-423f-a368-fc682c4c7828
-md"""
-As a review as to how to manipulate `N0f16` and images in `Images.jl` in general, please refer to <https://juliaimages.org/latest/tutorials/quickstart/>
-"""
-
-# ╔═╡ 32d8a777-0d0b-4e00-a7ce-c02196490397
-let
-  x = typemin(N0f16)
-  N0f16(x - 1)
-end
-
-# ╔═╡ f378fb69-8608-42a3-8c33-a7e112688765
-md"""
-**(R)** `N0f16` does not seem to have overflow/underflow issue -- when we surpass its min/max, we simply step into `float32`.
-
-Nevertheless, `RGB` has to worry about overflow/underflow.
-> When each of the RGB value is subtracted to below `0` (or augmented to above `1`), it will clip to `0` (or `1`, resp.)
-"""
-
-# ╔═╡ f015075d-c4ba-4e26-af0c-d1697fda1eeb
-RGB(0,0,0.9), RGB(0,0,0.9) - RGB(0,0,1)
-
-# ╔═╡ 88af2933-df27-4917-844a-bb4fa4b5192c
-RGB(1,0,0.7), RGB(1,0,0.7) - RGB(0,1,1)
-
-# ╔═╡ 33efe9db-d6cb-4fdb-abdf-d452d252eba5
-typeof(RGB)
-
-# ╔═╡ 5604cac5-e5e7-4254-8001-da7491fb3e80
-typeof(RGB(0,0,-0.1)), typeof(RGB(0,0,0.9)), typeof(RGB(0,0,1))
-
-# ╔═╡ ba549fb1-823e-4e53-b7fa-aec4587a2e81
-RGB(0,0,0.9) - RGB(0,0,1) == RGB(0,0,0)
-
-# ╔═╡ 7f24587f-eeaf-4a58-896a-d71c88159134
-RGB(0,0,0.9) - RGB(0,0,1) == RGB(0,0,0.9-1)
-
-# ╔═╡ 90d6b4eb-bdc0-4208-8b58-d54f9e928431
-typeof(RGB(0,0,0.9) - RGB(0,0,1))
-
-# ╔═╡ 38a8fd0f-031b-4319-90fd-fa22b59bd40a
-RGB(-0.9,-0.9,-0.9), RGB(1,1,0) + RGB(1,0,1)
-
-# ╔═╡ eb746689-50c2-4d95-b5c5-6fd7056ce49f
-md"""
-Although `RGB(0,0,100)` is prohibited, `RGB(0,0,100.0)` is allowed.
-"""
-
-# ╔═╡ 7329d748-28df-465b-8ac3-7acb75565ab3
-RGB(0,0,100.0)
-
-# ╔═╡ 4d1c9b36-b381-46e7-83d3-9213c94b9db5
-md"""
-As a result, the above `gradient0` method cannot faithfully reflect the difference color. Let's re-implement it.
-"""
-
-# ╔═╡ fc81b7ef-5236-41d3-b421-31b0e1f60d06
-let
-  piece = puzzles[1][1][end] 
-  reinterpret(Float32, piece)
-end
-
-# ╔═╡ e3162c5a-d9cc-465b-ab34-aafac6380ef2
-let
-  piece = puzzles[1][1][end] 
-  reinterpret(Float16, piece)
-end
-
 # ╔═╡ 6df7b1ef-9df4-4fd3-ad6b-bf563e5fbfef
 let
   piece = puzzles[1][1][end] 
@@ -218,106 +130,11 @@ function gradient1(piece; side="L")
   end
 end
 
-# ╔═╡ 58b2d8fb-92c2-4e44-83fb-296ad639ed8b
-let
-  piece = puzzles[1][1][end] 
-  gradient1(piece)
-end
-
-# ╔═╡ f9a3f8ca-3892-4186-82d7-fa359fb9593b
-md"""
-**(?)** Explain the color difference you observed btw `gradient1(piece)` and `gradient0(piece)`.
-"""
-
 # ╔═╡ b37e2a98-472d-45ca-bf27-2456b261ade4
 let
   piece = puzzles[1][1][end]
   piece[:, end], piece[:, end-1]
 end
-
-# ╔═╡ d45716aa-43c5-4cda-85f2-f7c73eb738f1
-let
-  piece = puzzles[1][1][end]
-  piece[:, end] - piece[:, end-1]
-end
-
-# ╔═╡ 57620bd2-4fcd-4a71-adf3-f8dc9a9c7681
-let
-  piece = puzzles[1][1][end]
-  typeof(piece[:, end] - piece[:, end-1])
-end
-
-# ╔═╡ d145f876-1b70-4a28-9dc7-a55f3f6ee166
-N0f16(0.9) - N0f16(1)
-
-# ╔═╡ 2fbc4daa-2d96-4f52-a192-0b9c9ec2cb67
-md"""
-I was wrong: `N0f16` has overflow/underflow issues, like the cell above shows.
-
-"""
-
-# ╔═╡ 85ff0504-0280-491f-b67e-5080dac0afb4
-RGB(N0f16(0),N0f16(0),N0f16(0.5)) - RGB(0,0,1)
-
-# ╔═╡ 6b8c4b44-77e5-463e-b03d-4b9f9e9818e3
-typeof(RGB(N0f16(0),N0f16(0),N0f16(0.5)) - RGB(0,0,1))
-
-# ╔═╡ c14df2f0-0669-48ea-81bd-4a699f877db9
-md"""
-This explains the color difference btw `gradient0(piece)` and `gradient1(piece)` and also shows that `gradient1(piece)` is an implementation free of overflow/underflow worries.
-"""
-
-# ╔═╡ ccf6fdd7-964c-431b-b9a6-8fa050ada3df
-md"""
-**(?)** How to inspect the pixel values?
-"""
-
-# ╔═╡ 6a41610d-ada6-4ebb-95b6-b7dd6237dc72
-let
-  piece = puzzles[1][1][end] 
-  typeof(gradient1(piece))
-end
-
-# ╔═╡ 4d8040d5-9c87-47f2-a1d1-17ac8f8a07e6
-let
-  piece = puzzles[1][1][end] 
-  display(MIME("text/plain"), gradient1(piece))
-end
-
-# ╔═╡ 35a7cd24-063c-4491-8534-a2bac9f45328
-dump(puzzles[1][1][end])
-
-# ╔═╡ d42c2706-87e6-455f-a16b-d09ebb1b892f
-typeof(puzzles[1][1][end])
-
-# ╔═╡ 2b001a3b-83bb-425b-a947-f882d5423f19
-let
-  piece = puzzles[1][1][end] 
-  channelview(gradient1(piece))
-end
-
-# ╔═╡ 5ccf506e-e6e7-46c8-8103-8e84dec2e2c1
-let
-  piece = puzzles[1][1][end] 
-  reinterpret(reshape, Float32, gradient1(piece))
-end
-
-# ╔═╡ c1b13d6b-9fbb-41ea-b41b-56df32cd2063
-let
-  piece = puzzles[1][1][end] 
-  channelview(piece[:, end]), channelview(piece[:, end-1])
-end
-
-# ╔═╡ 7c4fb0c4-e77e-4216-aa11-ec6ac7f6dd6c
-let
-  piece = puzzles[1][1][end] 
-  channelview(gradient0(piece))
-end
-
-# ╔═╡ 3c49dbef-5c48-4e10-866d-710d65cadc96
-md"""
-It seems that converting the entry type from `N0f16` to `Float32` resolves the underflow issue.
-"""
 
 # ╔═╡ 1fbc7426-5f9a-452c-b715-aa3d5bbbec28
 
@@ -326,6 +143,47 @@ It seems that converting the entry type from `N0f16` to `Float32` resolves the u
 md"""
 ### Mean and covariances
 """
+
+# ╔═╡ 546063e2-62e7-4839-910a-8c84f9cc1304
+function gradient2(piece; side="L")
+  @assert side in ("L", "R")
+  grad = if side == "L"
+           float.(piece[:,end]) - float.(piece[:,end-1])
+         else
+           float.(piece[:,1]) - float.(piece[:,2])
+         end
+  return channelview(grad)
+end
+
+# ╔═╡ 2f945932-7225-4959-8e1d-dca3d2452a6c
+let
+  piece = puzzles[1][1][end]
+  typeof(piece)
+end
+
+# ╔═╡ 056d29a3-3b77-4cdb-834d-329cfb00654d
+md"""
+Note that `mean1` and `mean2`'s numerical results are identical.
+
+"""
+
+# ╔═╡ 62f95a22-ac9b-428b-9d34-17f72564b8af
+function gradient1(left_piece::Matrix{RGB{N0f16}}, right_piece::Matrix{RGB{N0f16}})
+  grad = float.(right_piece[:,1]) - float.(left_piece[:,end])
+  return grad
+end
+
+# ╔═╡ 58b2d8fb-92c2-4e44-83fb-296ad639ed8b
+let
+  piece = puzzles[1][1][end] 
+  gradient1(piece)
+end
+
+# ╔═╡ 2b001a3b-83bb-425b-a947-f882d5423f19
+let
+  piece = puzzles[1][1][end] 
+  channelview(gradient1(piece))
+end
 
 # ╔═╡ 2dedc6af-4bc8-489f-bfc2-d831d91ed3b7
 let
@@ -339,9 +197,6 @@ let
   typeof(sum(gradient1(piece)))
 end
 
-# ╔═╡ 65c138b3-31ea-40e5-875b-ba5cd273e508
-methodswith(RGB)
-
 # ╔═╡ cc31bfc2-62e7-428c-b927-edba6d6204c9
 let
   piece = puzzles[1][1][end]
@@ -349,66 +204,23 @@ let
   somme.r, somme.g, somme.b
 end
 
-# ╔═╡ ad02d04c-c344-454c-b58d-48d96d366a03
-red.(imgs[1])
-
-# ╔═╡ 546063e2-62e7-4839-910a-8c84f9cc1304
-function gradient2(piece; side="L")
-  @assert side in ("L", "R")
-  grad = if side == "L"
-           float.(piece[:,end]) - float.(piece[:,end-1])
-         else
-           float.(piece[:,1]) - float.(piece[:,2])
-         end
-  return channelview(grad)
-end
-
-# ╔═╡ 08a47def-87b4-460b-a6bf-b5f06c59220b
-let
-  piece = puzzles[1][1][end]
-  gradient2(piece)
-end
-
-# ╔═╡ e6eaeac0-bc7f-4879-b045-1f2ab8143b13
-let
-  piece = puzzles[1][1][end]
-  sum(gradient2(piece))
-end
-
-# ╔═╡ 064a47bf-33bf-4a4b-8cde-65809bb3dcea
-let
-  piece = puzzles[1][1][end]
-  sum(gradient2(piece), dims=2)
-end
-
-# ╔═╡ 99526371-3de1-447e-9dc5-f58f8ae4f024
-let
-  piece = puzzles[1][1][end]
-  sum(gradient1(piece), dims=2)
-end
-
-# ╔═╡ ae4af2e8-334f-4fca-bc1e-df34c1d15493
-let
-  piece = puzzles[1][1][end]
-  typeof(gradient1(piece))
-end
-
-# ╔═╡ c89f1e87-a39b-416c-96d3-6e6e9bb83839
-let
-  piece = puzzles[1][1][end]
-  sum(gradient1(piece), dims=2) == gradient1(piece)
-end
-
-# ╔═╡ 833e9951-ceb9-49a0-8c56-2ad060754a9c
-let
-  piece = puzzles[1][1][end]
-  sum(gradient1(piece), dims=1)
-end
-
-# ╔═╡ bb8ebb3d-e61c-4768-8447-c2740e3e3362
+# ╔═╡ 3a932e34-7faf-4df5-b670-6197df4d8847
 function mean1(piece; side="L")
   @assert side in ("L", "R")
   sum(gradient1(piece; side=side))
+end
+
+# ╔═╡ 2547b781-f2e5-42e3-9a7c-76ec415fabec
+let
+  piece = puzzles[1][1][end]
+  m = mean1(piece)
+  m.r, m.g, m.b
+end
+
+# ╔═╡ c5cef9f8-509a-463c-80e0-31eddeeaab30
+function gradient2(left_piece::Matrix{RGB{N0f16}}, right_piece::Matrix{RGB{N0f16}})
+  grad = float.(right_piece[:,1]) - float.(left_piece[:,end])
+  return channelview(grad)
 end
 
 # ╔═╡ 4c234146-258f-4653-a5e5-917e0b0dc9c3
@@ -423,17 +235,43 @@ let
   mean2(piece)
 end
 
-# ╔═╡ 7ad4af23-54c6-4fab-b1b8-48d56ab0a206
+# ╔═╡ 5b9d33f2-04be-4a88-abf8-fbb819bc338a
 let
-  piece = puzzles[1][1][end]
-  m = mean1(piece)
-  m.r, m.g, m.b
+  pieceL, pieceR = puzzles[1][1][end], puzzles[1][1][end÷2]
 end
 
-# ╔═╡ 0505f03b-bea7-4d3e-942d-bb5d2b88c3b3
+# ╔═╡ 4cf32ae8-0e5d-4ff8-8d90-aa9972628d90
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  gradient1(pieceL, pieceR)
+end
+
+# ╔═╡ 76252558-3014-4076-b058-9a8abb0c4f82
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  typeof(gradient1(pieceL, pieceR)), size(gradient1(pieceL, pieceR))
+end
+
+# ╔═╡ 1bbfddb5-cae4-4793-9cdc-b72ef8870ec8
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  gradient2(pieceL, pieceR)
+end
+
+# ╔═╡ 1b27a7f3-36a4-4bb4-a049-0ceb72a9fc63
 md"""
-Note that `mean1` and `mean2`'s numerical results are identical.
+## Matrix Multiplication
+**(?)** Could we multiply `Matrix{RGB{Float32}}`'s like we multiply matrices?
 """
+
+# ╔═╡ dd5b9dbe-a3a6-49d7-9644-4feb24d49657
+[1,2,3], [1,2,3]'
+
+# ╔═╡ c053bc13-640e-4ee5-b935-48a601bfce8c
+puzzles[1][1][end], puzzles[1][1][end]'
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1695,68 +1533,32 @@ version = "0.9.1+5"
 # ╠═b8a2795f-386e-41b1-881f-d03250b95009
 # ╠═5e0e5b50-f1c1-49f9-a7fa-fce88298b731
 # ╠═251fcad2-023e-4229-8dae-0e809dabe639
-# ╠═4d8aa997-1287-44a9-a970-2c5bfe9dda9d
-# ╟─91a580a4-407b-4ede-8c0c-8bb0ed6f3b43
-# ╠═c842f804-78e6-4712-b69c-81efe10f8b7e
-# ╠═c6fcf04d-9884-498e-a375-f98cdcce49de
-# ╟─e0bc193b-cd5f-423f-a368-fc682c4c7828
-# ╠═32d8a777-0d0b-4e00-a7ce-c02196490397
-# ╟─f378fb69-8608-42a3-8c33-a7e112688765
-# ╠═f015075d-c4ba-4e26-af0c-d1697fda1eeb
-# ╠═88af2933-df27-4917-844a-bb4fa4b5192c
-# ╠═33efe9db-d6cb-4fdb-abdf-d452d252eba5
-# ╠═5604cac5-e5e7-4254-8001-da7491fb3e80
-# ╠═ba549fb1-823e-4e53-b7fa-aec4587a2e81
-# ╠═7f24587f-eeaf-4a58-896a-d71c88159134
-# ╠═90d6b4eb-bdc0-4208-8b58-d54f9e928431
-# ╠═38a8fd0f-031b-4319-90fd-fa22b59bd40a
-# ╟─eb746689-50c2-4d95-b5c5-6fd7056ce49f
-# ╠═7329d748-28df-465b-8ac3-7acb75565ab3
-# ╟─4d1c9b36-b381-46e7-83d3-9213c94b9db5
-# ╠═fc81b7ef-5236-41d3-b421-31b0e1f60d06
-# ╠═e3162c5a-d9cc-465b-ab34-aafac6380ef2
 # ╠═6df7b1ef-9df4-4fd3-ad6b-bf563e5fbfef
 # ╠═3b6ea347-0608-416b-8789-e8ca66f8c580
 # ╠═a39ecce8-92fa-4206-b3b7-c8148f226734
 # ╠═58b2d8fb-92c2-4e44-83fb-296ad639ed8b
-# ╟─f9a3f8ca-3892-4186-82d7-fa359fb9593b
 # ╠═b37e2a98-472d-45ca-bf27-2456b261ade4
-# ╠═d45716aa-43c5-4cda-85f2-f7c73eb738f1
-# ╠═57620bd2-4fcd-4a71-adf3-f8dc9a9c7681
-# ╠═d145f876-1b70-4a28-9dc7-a55f3f6ee166
-# ╟─2fbc4daa-2d96-4f52-a192-0b9c9ec2cb67
-# ╠═85ff0504-0280-491f-b67e-5080dac0afb4
-# ╠═6b8c4b44-77e5-463e-b03d-4b9f9e9818e3
-# ╟─c14df2f0-0669-48ea-81bd-4a699f877db9
-# ╟─ccf6fdd7-964c-431b-b9a6-8fa050ada3df
-# ╠═6a41610d-ada6-4ebb-95b6-b7dd6237dc72
-# ╠═4d8040d5-9c87-47f2-a1d1-17ac8f8a07e6
-# ╠═35a7cd24-063c-4491-8534-a2bac9f45328
-# ╠═d42c2706-87e6-455f-a16b-d09ebb1b892f
 # ╠═2b001a3b-83bb-425b-a947-f882d5423f19
-# ╠═5ccf506e-e6e7-46c8-8103-8e84dec2e2c1
-# ╠═c1b13d6b-9fbb-41ea-b41b-56df32cd2063
-# ╠═7c4fb0c4-e77e-4216-aa11-ec6ac7f6dd6c
-# ╟─3c49dbef-5c48-4e10-866d-710d65cadc96
 # ╠═1fbc7426-5f9a-452c-b715-aa3d5bbbec28
 # ╟─2168b77d-06e1-4c80-8cb6-2e80099c7efb
 # ╠═2dedc6af-4bc8-489f-bfc2-d831d91ed3b7
 # ╠═f5bdcc5a-dae7-41fb-9c9f-976c7f40d262
-# ╠═65c138b3-31ea-40e5-875b-ba5cd273e508
 # ╠═cc31bfc2-62e7-428c-b927-edba6d6204c9
-# ╠═ad02d04c-c344-454c-b58d-48d96d366a03
 # ╠═546063e2-62e7-4839-910a-8c84f9cc1304
-# ╠═08a47def-87b4-460b-a6bf-b5f06c59220b
-# ╠═e6eaeac0-bc7f-4879-b045-1f2ab8143b13
-# ╠═064a47bf-33bf-4a4b-8cde-65809bb3dcea
-# ╠═99526371-3de1-447e-9dc5-f58f8ae4f024
-# ╠═ae4af2e8-334f-4fca-bc1e-df34c1d15493
-# ╠═c89f1e87-a39b-416c-96d3-6e6e9bb83839
-# ╠═833e9951-ceb9-49a0-8c56-2ad060754a9c
-# ╠═bb8ebb3d-e61c-4768-8447-c2740e3e3362
+# ╠═3a932e34-7faf-4df5-b670-6197df4d8847
 # ╠═4c234146-258f-4653-a5e5-917e0b0dc9c3
 # ╠═75356436-79a8-48ca-bea1-ccab005a51d7
-# ╠═7ad4af23-54c6-4fab-b1b8-48d56ab0a206
-# ╠═0505f03b-bea7-4d3e-942d-bb5d2b88c3b3
+# ╠═2547b781-f2e5-42e3-9a7c-76ec415fabec
+# ╠═2f945932-7225-4959-8e1d-dca3d2452a6c
+# ╟─056d29a3-3b77-4cdb-834d-329cfb00654d
+# ╠═62f95a22-ac9b-428b-9d34-17f72564b8af
+# ╠═c5cef9f8-509a-463c-80e0-31eddeeaab30
+# ╠═5b9d33f2-04be-4a88-abf8-fbb819bc338a
+# ╠═4cf32ae8-0e5d-4ff8-8d90-aa9972628d90
+# ╠═76252558-3014-4076-b058-9a8abb0c4f82
+# ╠═1bbfddb5-cae4-4793-9cdc-b72ef8870ec8
+# ╠═1b27a7f3-36a4-4bb4-a049-0ceb72a9fc63
+# ╠═dd5b9dbe-a3a6-49d7-9644-4feb24d49657
+# ╠═c053bc13-640e-4ee5-b935-48a601bfce8c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
