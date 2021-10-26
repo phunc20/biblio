@@ -10,6 +10,7 @@ begin
   using Plots
   using Images
   using Random
+  using LinearAlgebra # I, identity matrix
 end
 
 # ╔═╡ 0bc8a7f3-5b7a-483c-855a-044a0d681397
@@ -235,6 +236,12 @@ let
   mean2(piece)
 end
 
+# ╔═╡ 981f9dcd-0c2c-495f-ac95-9ac4f7e3daf2
+let
+  piece = puzzles[1][1][end]
+  gradient2(piece)
+end
+
 # ╔═╡ 5b9d33f2-04be-4a88-abf8-fbb819bc338a
 let
   pieceL, pieceR = puzzles[1][1][end], puzzles[1][1][end÷2]
@@ -273,10 +280,205 @@ md"""
 # ╔═╡ c053bc13-640e-4ee5-b935-48a601bfce8c
 puzzles[1][1][end], puzzles[1][1][end]'
 
+# ╔═╡ 091578fa-7bc7-489e-8918-28ad7529ee46
+let
+  A = [1. 0. 0.
+       0. 2. 0.
+       0. 0. 4.]
+  A * RGB(0,0,1)
+end
+
+# ╔═╡ f45a48c9-ebaf-406c-bad2-23db093e0c62
+#function vec(color::RGB{Union{AbstractFloat, FixedPointNumbers.FixedPoint}})
+function vec(color)
+	return [color.r color.g color.b]'
+end
+
+# ╔═╡ 1c71f987-27e1-4473-a4db-a72a9cefa582
+let
+  A = [1. 0. 0.
+       0. 2. 0.
+       0. 0. 4.]
+  A * vec(RGB(0,0,1.))
+end
+
+# ╔═╡ f88b7f37-1a5b-4454-9dec-15d9f047b70f
+
+
+# ╔═╡ 1d61ca80-48d0-41e1-b899-59b08f45ef26
+
+
+# ╔═╡ fff727cd-4e85-4cd0-9493-a86ff6e0f2d3
+md"""
+## Explanation on Mathematical Formulation of Compatibility
+This part of the paper, after my digestion, means the following. For each fixed channel ``c = 1, 2, 3``, we regard the ``G_{iL}(p, c), p = 1, \ldots, P`` as samples of a random variable ``X_{c}``. (The ``i`` is the index for the jigsaw piece.) As a result, the sample mean (_moyenne empirique_ in French) equals
+```math
+\frac{1}{P} \sum_{p=1}^{P} G_{iL}(p, c) = \mu_{iL}(c)\,.
+```
+
+Similarly, corresponding to the covariance matrix of the random variables ``X_{1}, X_{2}, X_{3}``, we have the sample covariance matrix ``S_{iL}``, where for example, the sample covariance of ``X_{1}, X_{2}`` equals
+```math
+\begin{align}
+  &\frac{1}{P} \sum_{p=1}^{P} (G_{iL}(p, 1) - \mu_{iL}(1)) (G_{iL}(p, 2) - \mu_{iL}(2)) \; = \\
+  &\frac{1}{P} \sum_{p=1}^{P} G_{iL}(p, 1) \,G_{iL}(p, 2) - \mu_{iL}(1)\,\mu_{iL}(2)\,.
+\end{align}
+```
+"""
+
+# ╔═╡ 7630ac65-ae6f-472d-85e2-9f6c106b7bf3
+function cov2(piece; side="L")
+  @assert side in ("L", "R")
+  G = gradient2(piece; side=side)
+  μ = mean2(piece; side=side)
+  P = size(G, 2)
+  S = zeros(3,3)
+  for i in 1:3, j in i:3
+    S[i, j] = G[i,:]' * G[j,:] / P - μ[i] * μ[j]
+  end
+  for i in 2:3, j in 1:i-1
+    S[i, j] = S[j, i]
+  end
+  return S
+end
+
+# ╔═╡ ca96094e-e6b2-4af3-9b75-02afbe0a1d7a
+let
+  piece = puzzles[1][1][end]
+  cov2(piece)
+end
+
+# ╔═╡ fa59aa9a-96b9-4f24-9db7-702edbc55347
+let
+  piece = puzzles[1][1][end]
+  size(piece)
+end
+
+# ╔═╡ c24b378f-98bd-4366-b60a-70ec049d5dc0
+let
+  pinv(I(3))
+end
+
+# ╔═╡ 7b4edf8c-85c6-472a-b779-51639a56c763
+let
+  A = [3. 0 0
+       0  2. 0
+       0  0  1.]
+  pinv(A)
+end
+
+# ╔═╡ ca3f4290-a468-4fed-baa6-b8ab3caf06a6
+function dissimilarity2(left_piece::Matrix{RGB{N0f16}}, right_piece::Matrix{RGB{N0f16}}; side="L")
+  @assert side in ("L", "R")
+  G = gradient2(left_piece, right_piece)
+  if side == "L"
+    μ = mean2(left_piece; side)
+    S = cov2(left_piece; side)
+  else
+    μ = mean2(right_piece; side)
+    S = cov2(right_piece; side)
+  end
+  S_inv = pinv(S)
+  P = size(left_piece, 1)
+  D = 0
+  for p in 1:P
+    x = G[:,p] - μ
+    D += (x' * S_inv * x)[1]
+  end
+  return D
+end
+
+# ╔═╡ 7bb95c55-99ef-4576-be22-6c94b3fcd706
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  dissimilarity2(pieceL, pieceR)
+end
+
+# ╔═╡ 9c554bbe-b881-49cf-b2bb-a07a5166349c
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  dissimilarity2(pieceL, pieceR; side="R")
+end
+
+# ╔═╡ 78df39f0-2dc1-4e1d-bbfa-59dc9c8adfc9
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  pieceL, pieceR
+end
+
+# ╔═╡ 86c168dd-66df-4165-bb43-ddae97e81314
+MGC2(left_piece::Matrix{RGB{N0f16}}, right_piece::Matrix{RGB{N0f16}}) = dissimilarity2(left_piece, right_piece; side="L") + dissimilarity2(left_piece, right_piece; side="R")
+
+# ╔═╡ 4d43cb89-371f-4a88-a41f-e51fcf5f0a5c
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  MGC2(pieceL, pieceR)
+end
+
+# ╔═╡ 287320eb-8957-4299-bfbc-af5d72092a7e
+md"""
+Let's find pieces that are really neighbor to each other and verify that their `MGC2` really gets smaller.
+"""
+
+# ╔═╡ 62613cd3-33c9-4f43-b79e-0e862c5e0293
+# let
+#   pieces, Kx, Ky = puzzles[1]
+#   reconstruct = reshape(pieces, (Kx, Ky))
+#   Array{Matrix{RGB{N0f16}}}(reconstruct)
+# end
+
+# ╔═╡ efd72ab4-9140-4aee-8ddb-7bf8a3db9f26
+puzzles[1][1][end-18], puzzles[1][1][end]
+
+# ╔═╡ 24372c75-9d51-4817-8eb7-df66a9c483ac
+let
+  pieceL = puzzles[1][1][end-18]
+  pieceR = puzzles[1][1][end]
+  MGC2(pieceL, pieceR)
+end
+
+# ╔═╡ b2a2b51c-9bb9-44a6-8714-054fcae9a71e
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  gradient1(pieceL, pieceR) .- mean1(pieceL)
+end
+
+# ╔═╡ 97aa1c50-0729-4a11-ae7a-c7b8a692db58
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  gradient2(pieceL, pieceR), mean2(pieceL)
+end
+
+# ╔═╡ 3399528c-d18e-4d87-919c-e97e92cb8dee
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  gradient2(pieceL, pieceR) .- mean2(pieceL)
+end
+
+# ╔═╡ 96e3d7d8-5b89-46db-b761-814b56c1755d
+let
+  pieceL = puzzles[1][1][end]
+  pieceR = puzzles[1][1][end÷2]
+  vec.(gradient1(pieceL, pieceR) .- mean1(pieceL))
+end
+
+# ╔═╡ f18c56f4-2786-450c-b6de-93b5094dce8a
+
+
+# ╔═╡ 148c94aa-742c-4126-bbf1-0b216d75495d
+
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -1548,6 +1750,7 @@ version = "0.9.1+5"
 # ╠═3a932e34-7faf-4df5-b670-6197df4d8847
 # ╠═4c234146-258f-4653-a5e5-917e0b0dc9c3
 # ╠═75356436-79a8-48ca-bea1-ccab005a51d7
+# ╠═981f9dcd-0c2c-495f-ac95-9ac4f7e3daf2
 # ╠═2547b781-f2e5-42e3-9a7c-76ec415fabec
 # ╠═2f945932-7225-4959-8e1d-dca3d2452a6c
 # ╟─056d29a3-3b77-4cdb-834d-329cfb00654d
@@ -1557,8 +1760,35 @@ version = "0.9.1+5"
 # ╠═4cf32ae8-0e5d-4ff8-8d90-aa9972628d90
 # ╠═76252558-3014-4076-b058-9a8abb0c4f82
 # ╠═1bbfddb5-cae4-4793-9cdc-b72ef8870ec8
-# ╠═1b27a7f3-36a4-4bb4-a049-0ceb72a9fc63
+# ╟─1b27a7f3-36a4-4bb4-a049-0ceb72a9fc63
 # ╠═dd5b9dbe-a3a6-49d7-9644-4feb24d49657
 # ╠═c053bc13-640e-4ee5-b935-48a601bfce8c
+# ╠═091578fa-7bc7-489e-8918-28ad7529ee46
+# ╠═f45a48c9-ebaf-406c-bad2-23db093e0c62
+# ╠═1c71f987-27e1-4473-a4db-a72a9cefa582
+# ╠═f88b7f37-1a5b-4454-9dec-15d9f047b70f
+# ╠═1d61ca80-48d0-41e1-b899-59b08f45ef26
+# ╟─fff727cd-4e85-4cd0-9493-a86ff6e0f2d3
+# ╠═7630ac65-ae6f-472d-85e2-9f6c106b7bf3
+# ╠═ca96094e-e6b2-4af3-9b75-02afbe0a1d7a
+# ╠═fa59aa9a-96b9-4f24-9db7-702edbc55347
+# ╠═c24b378f-98bd-4366-b60a-70ec049d5dc0
+# ╠═7b4edf8c-85c6-472a-b779-51639a56c763
+# ╠═ca3f4290-a468-4fed-baa6-b8ab3caf06a6
+# ╠═7bb95c55-99ef-4576-be22-6c94b3fcd706
+# ╠═9c554bbe-b881-49cf-b2bb-a07a5166349c
+# ╠═78df39f0-2dc1-4e1d-bbfa-59dc9c8adfc9
+# ╠═86c168dd-66df-4165-bb43-ddae97e81314
+# ╠═4d43cb89-371f-4a88-a41f-e51fcf5f0a5c
+# ╟─287320eb-8957-4299-bfbc-af5d72092a7e
+# ╠═62613cd3-33c9-4f43-b79e-0e862c5e0293
+# ╠═efd72ab4-9140-4aee-8ddb-7bf8a3db9f26
+# ╠═24372c75-9d51-4817-8eb7-df66a9c483ac
+# ╠═b2a2b51c-9bb9-44a6-8714-054fcae9a71e
+# ╠═97aa1c50-0729-4a11-ae7a-c7b8a692db58
+# ╠═3399528c-d18e-4d87-919c-e97e92cb8dee
+# ╠═96e3d7d8-5b89-46db-b761-814b56c1755d
+# ╠═f18c56f4-2786-450c-b6de-93b5094dce8a
+# ╠═148c94aa-742c-4126-bbf1-0b216d75495d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
