@@ -17,8 +17,20 @@ top -p <pid>
 
 Note that the code in `threadmem.py` considerately prints out the PID for us.
 ```bash
+(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python threadmem.py
+PID = 115113
+```
+At the same time, copy the above PID, open another terminal and run:
+```
+~ ❯❯❯ top -p 115113
+top - 15:16:20 up 39 min,  7 users,  load average: 0.42, 0.21, 0.27
+Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.0 us,  0.4 sy,  0.0 ni, 98.3 id,  0.0 wa,  0.2 hi,  0.1 si,  0.0 st
+MiB Mem :   7746.5 total,   5982.2 free,    778.9 used,    985.4 buff/cache
+MiB Swap:  12288.0 total,  12288.0 free,      0.0 used.   6663.6 avail Mem
 
-
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+ 115113 phunc20   20   0   80.2g 118976   4860 S   0.0   1.5   0:01.39 python
 ```
 
 **_Rmk._** It is possible that, when your computer is busy running too many other processes, running
@@ -31,7 +43,7 @@ Traceback (most recent call last):
     _start_new_thread(self._bootstrap, ())
 RuntimeError: can't start new thread
 ```
-This happened to my Thinkpad X61s when running brave browser with around 20 tabs and tmux with 6 tabs.
+This happened to my Thinkpad X61s when running brave browser with around 20 tabs and tmux with 6 tabs (not doing anything heavy).
 
 
 ## Bots
