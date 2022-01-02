@@ -1,4 +1,5 @@
-## Raymond Hettinger and Threading
+## YouTube Video Recommendations
+### Raymond Hettinger and Threading
 related
 https://www.youtube.com/watch?v=Bv25Dwe84g0&t=3s
 https://www.youtube.com/watch?v=9zinZmE3Ogk&t=496s
@@ -11,16 +12,20 @@ https://www.youtube.com/watch?v=S_ipdVNSFlo
 ## Per-Thread Stack Space
 To observe the Python process running `threadmem.py` using the command `top`,
 remember to use the `-p` option:
+
 ```bash
 top -p <pid>
 ```
 
 Note that the code in `threadmem.py` considerately prints out the PID for us.
+
 ```bash
 (oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python threadmem.py
 PID = 115113
 ```
+
 At the same time, copy the above PID, open another terminal and run:
+
 ```
 ~ ❯❯❯ top -p 115113
 top - 15:16:20 up 39 min,  7 users,  load average: 0.42, 0.21, 0.27
@@ -35,6 +40,7 @@ MiB Swap:  12288.0 total,  12288.0 free,      0.0 used.   6663.6 avail Mem
 
 **_Rmk._** It is possible that, when your computer is busy running too many other processes, running
 `threadmem.py` will complain
+
 ```
 Traceback (most recent call last):
   File "threadmem.py", line 7, in <module>
@@ -47,52 +53,89 @@ This happened to my Thinkpad X61s when running brave browser with around 20 tabs
 
 
 ## Bots
-The major diff btw `cutlery_test.py` and `cutlery_test_adapt.py` is at
+The major diff btw `cutlery_test_v00.py` and `cutlery_test_v01.py` is at
+
 ```python
 def change(self, knives, forks):
     with self.lock:
         self.knives += knives
         self.forks += forks
 ```
+
 where `self.lock` was defined in `__init__()` as a `threading.Lock()` instance to avoid race condition.
 
-
+Here is a few examle runs conducted on my Thinkpad X61s.
 
 ```bash
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test.py 100
-Kitchen inventory before service: Cutlery(knives=0, forks=0)
-Kitchen inventory after service: Cutlery(knives=0, forks=0)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test.py 100
-Kitchen inventory before service: Cutlery(knives=0, forks=0)
-Kitchen inventory after service: Cutlery(knives=0, forks=0)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test.py 5000
-Kitchen inventory before service: Cutlery(knives=0, forks=0)
-Kitchen inventory after service: Cutlery(knives=-4, forks=-8)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test.py 5000
-Kitchen inventory before service: Cutlery(knives=0, forks=0)
-Kitchen inventory after service: Cutlery(knives=-4, forks=0)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test_adapt.py
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v00.py 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service: Cutlery(knives=108, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v00.py 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service: Cutlery(knives=100, forks=92)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v00.py 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service: Cutlery(knives=104, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v00.py 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service: Cutlery(knives=96, forks=100)
+
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v01.py --n_tasks 1986
 args.n_bots = 10
-args.n_tasks = 100
-Kitchen inventory before service: Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7ff94336df30>)
-Kitchen inventory after service : Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7ff94336df30>)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test_adapt.py
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f69c77c0080>)
+Kitchen inventory after service : Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f69c77c0080>)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v01.py --n_tasks 1986
 args.n_bots = 10
-args.n_tasks = 100
-Kitchen inventory before service: Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7fd823d3bf30>)
-Kitchen inventory after service : Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7fd823d3bf30>)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test_adapt.py --n_tasks=5000
-args.n_bots = 10
-args.n_tasks = 5000
-Kitchen inventory before service: Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7f174bf57f30>)
-Kitchen inventory after service : Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7f174bf57f30>)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯ python cutlery_test_adapt.py --n_tasks=5000
-args.n_bots = 10
-args.n_tasks = 5000
-Kitchen inventory before service: Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7fece1df4f30>)
-Kitchen inventory after service : Cutlery(knives=0, forks=0, lock=<unlocked _thread.lock object at 0x7fece1df4f30>)
-(oft) ~/.../asyncio/caleb_hattingh/02-threads ❯❯❯
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f9f80189080>)
+Kitchen inventory after service : Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f9f80189080>)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v01.py --n_tasks 1986 --n_bots=20
+args.n_bots = 20
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f4ba998c080>)
+Kitchen inventory after service : Cutlery(knives=100, forks=100, lock=<unlocked _thread.lock object at 0x7f4ba998c080>)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$
 ```
 
+Note that the code w/o lock could have worked, provided that there is only one bot:
+
+```bash
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py
+args.n_bots = 10
+args.n_tasks = 100
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=100, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py
+args.n_bots = 10
+args.n_tasks = 100
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=100, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py --n_tasks 1986
+args.n_bots = 10
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=96, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py --n_tasks 1986
+args.n_bots = 10
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=88, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py --n_tasks 1986 --n_bots 1
+args.n_bots = 1
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=100, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py --n_tasks 1986 --n_bots 1
+args.n_bots = 1
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=100, forks=100)
+(async) ~/.../asyncio/caleb_hattingh/02-threads$ python cutlery_test_v02.py --n_tasks 1986 --n_bots 1
+args.n_bots = 1
+args.n_tasks = 1986
+Kitchen inventory before service: Cutlery(knives=100, forks=100)
+Kitchen inventory after service : Cutlery(knives=100, forks=100)
+```
 
 

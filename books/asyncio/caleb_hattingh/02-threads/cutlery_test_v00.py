@@ -26,6 +26,7 @@ class Cutlery:
     forks = attrib(default=0)
 
     def give(self, to: "Cutlery", knives=0, forks=0):
+        # `to: Cutlery` won't work as arg spec
         self.change(-knives, -forks)
         to.change(knives, forks)
 
@@ -33,7 +34,7 @@ class Cutlery:
         self.knives += knives
         self.forks += forks
 
-kitchen = Cutlery(knives=0, forks=0)
+kitchen = Cutlery(knives=100, forks=100)
 bots = [ThreadBot() for i in range(10)]
 
 import sys

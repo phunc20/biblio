@@ -27,6 +27,7 @@ class Cutlery:
     lock = attrib(default=threading.Lock())
 
     def give(self, to: "Cutlery", knives=0, forks=0):
+        # `to: Cutlery` won't work as arg spec
         self.change(-knives, -forks)
         to.change(knives, forks)
 
@@ -37,7 +38,7 @@ class Cutlery:
 
 
 if __name__ == "__main__":
-    kitchen = Cutlery()
+    kitchen = Cutlery(knives=100, forks=100)
     
     import argparse
     parser = argparse.ArgumentParser()
