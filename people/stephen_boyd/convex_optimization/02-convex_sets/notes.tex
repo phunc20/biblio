@@ -1,0 +1,44 @@
+\documentclass{beamer}
+\usecolortheme{owl}
+%\usetheme{Boadilla}
+
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}[section]
+
+
+\begin{document}
+
+\section{2.1.2 Affine sets}
+%\subsection{sub a}
+\begin{frame}{2.1.2 Affine sets}
+  \textbf{(?)} Does $\theta_{1} x_{1} + \theta_{2} x_{2} + \theta_{3} x_{3}$, where $x_{1}, x_{2}, x_{3} \in \mathbb{R}^{n}$
+  and $\theta_{1}, \theta_{2}, \theta_{3} \in \mathbb{R}$ satisfy
+  $$
+    \theta_{1} + \theta_{2} + \theta_{3} = 1\,,
+  $$
+  constitute a plane in $\mathbb{R}^{n}$ (i.e. the plane containing all three points of $x_{1}, x_{2}, x_{3}$)?
+\end{frame}
+
+
+\section{2.1.5 Cones}
+\begin{frame}{2.1.5 Cones}
+  %\begin{definition}(Cone)
+  \begin{definition}
+    A set $C$ is said to be \textit{nonnegative homogeneous} or a \textit{cone} if $\forall x \in C, \theta \ge 0$, we
+    have $\theta x \in C$.
+  \end{definition}
+
+  In particular, a cone must \textit{contain the origin}.
+
+    \textbf{(?)} A set $C$ is a convex cone \textbf{iff} $\forall x_{1}, x_{2} \in C, \theta_{1}, \theta_{2} \ge 0$, we have
+    $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$.\\
+    \textbf{(R)} Assume that $\theta_{1} + \theta_{2} \gneq 0$, we have
+    $
+      \frac{\theta_{1}}{\theta_{1} + \theta_{2}} x_{1}
+      + \frac{\theta_{2}}{\theta_{1} + \theta_{2}} x_{2} \in C
+    $ because $C$ is convex. Then we can multiply this vector by $\theta_{1} + \theta_{2}$ and
+    it will still remain inside $C$ because $C$ is a cone, whence $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$
+\end{frame}
+
+
+\end{document}
