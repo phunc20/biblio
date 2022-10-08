@@ -1,0 +1,71 @@
+\documentclass{beamer}
+\usecolortheme{owl}
+%\usetheme{Boadilla}
+
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}[section]
+
+
+\begin{document}
+
+\section{1. Rounding Error}
+\begin{frame}{1.1 Floating-Point Formats: Definition}
+  A total of four parameters are associated with floating-point number representations:
+  $p, \beta, e_{\text{min}}, e_{\text{max}}$
+
+  $$
+    \pm d_{0}.d_{1}d_{2} \cdots d_{p-1} \times \beta^{e} = \pm\left( d_{0} + d_{1}\beta^{-1} + \cdots + d_{p-1}\beta^{-(p-1)} \right) \beta^{e},
+  $$
+  where
+  $$
+  \begin{aligned}
+    & 0 \le d_{t} < \beta \quad\forall\; t = 0, 1, 2, \cdots, p-1, \\
+    & e_{\text{min}} \le e \le e_{\text{max}}.
+  \end{aligned}
+  $$
+  There are therefore \textbf{at most} $\beta^{p} \cdot (e_{\text{max}} - e_{\text{min}} + 1) \cdot 2$ floating-point numbers.
+  ("\textbf{at most}" because the representation is not unique, e.g. $0.01 \times 10^{1} = 1.00 \times 10^{-1}.$
+  The $2$ due to $\pm$ signs.)
+  This means that one can encode them all using
+  $$
+    \lg\left( {\beta^{p} \cdot (e_{\text{max}} - e_{\text{min}} + 1) \cdot 2} \right) =
+    \lg(\beta^{p}) + \lg( e_{\text{max}} - e_{\text{min}} + 1) + 1
+  $$
+  bits.
+
+  %\vspace{10pt}
+  %\textbf{Rmk.}
+  %\begin{itemize}
+  %  \item<2-> The subspace $V$ is independent of the choice of $x_{0} \in C.$
+  %  \item<3-> We call any subset $C \subseteq E$ satisfying the above property an affine subset.
+  %\end{itemize}
+\end{frame}
+
+
+\begin{frame}{1.1 Floating-Point Formats: Q\&A}
+  \textbf{(?1)} Why $0.1_{10} = 1.1001100110011 \times 2^{-4}$ ($p=14, \beta=2$), i.e. why the repeating pattern of $0011$?
+
+  \vspace{7pt}
+\end{frame}
+
+
+\begin{frame}{1.1 Floating-Point Formats: Normalization}
+  We briefly mentioned that so far the floating-point representation is not unique.
+  For example, $0.01 \times 10^{1} = 1.00 \times 10^{-1}$ and zero can be represented
+  by $0.00 \times 10^{e}$ for any $e.$ (Sous-entendu $\beta = 10, p = 3.$)
+
+  We could make floating-point representation unique by requiring additionally that $d_{0} \gneq 0.$
+\end{frame}
+
+
+\section{2. IEEE Standard}
+\begin{frame}{2.1.5 Cones}
+  %%\begin{definition}(Cone)
+  %\begin{definition}
+  %  A set $C$ is said to be \textit{nonnegative homogeneous} or a \textit{cone} if $\forall x \in C, \theta \ge 0$, we
+  %  have $\theta x \in C$.
+  %\end{definition}
+\end{frame}
+
+
+\end{document}
