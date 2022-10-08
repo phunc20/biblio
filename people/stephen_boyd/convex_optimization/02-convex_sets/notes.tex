@@ -51,17 +51,44 @@
     have $\theta x \in C$.
   \end{definition}
 
+  \vspace{7pt}
   In particular, a cone must \textit{contain the origin}.
 
-    \textbf{(?)} A set $C$ is a convex cone \textbf{iff} $\forall x_{1}, x_{2} \in C, \theta_{1}, \theta_{2} \ge 0$, we have
-    $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$.\\
-    \textbf{(R)} Assume that $\theta_{1} + \theta_{2} \gneq 0$, we have
-    $
-      \frac{\theta_{1}}{\theta_{1} + \theta_{2}} x_{1}
-      + \frac{\theta_{2}}{\theta_{1} + \theta_{2}} x_{2} \in C
-    $ because $C$ is convex. Then we can multiply this vector by $\theta_{1} + \theta_{2}$ and
-    it will still remain inside $C$ because $C$ is a cone, whence $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$
+  %\textbf{(?)} A set $C$ is a convex cone \textbf{iff} $\forall x_{1}, x_{2} \in C, \theta_{1}, \theta_{2} \ge 0$, we have
+  %$\theta_{1}x_{1} + \theta_{2}x_{2} \in C$.\\
+  %\textbf{(R)} Assume that $\theta_{1} + \theta_{2} \gneq 0$, we have
+  %$
+  %  \frac{\theta_{1}}{\theta_{1} + \theta_{2}} x_{1}
+  %  + \frac{\theta_{2}}{\theta_{1} + \theta_{2}} x_{2} \in C
+  %$ because $C$ is convex. Then we can multiply this vector by $\theta_{1} + \theta_{2}$ and
+  %it will still remain inside $C$ because $C$ is a cone, whence $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$
 \end{frame}
 
+
+\begin{frame}{2.1.5 Cones: Q\&A}
+  \textbf{(?1)} Does there exist any \textbf{nonconvex} cone?\\
+  \textbf{(R1)} Yes. For example, in $\mathbb{R}^{2}$, let $C$ be the cone of two rays
+  $$
+    C = \left\{k\begin{pmatrix} 1\\1 \end{pmatrix}\;|\; k \ge 0 \right\}
+        \cup \left\{k\begin{pmatrix} -1\\1 \end{pmatrix}\;|\; k \ge 0 \right\}
+  $$
+  (TODO: Add a TikZ visualization here!)
+  Then clearly $C$ is not convex.
+
+  We could also see that a ray seems to be the most basic (nonempty) cone (component).
+\end{frame}
+
+
+\begin{frame}{2.1.5 Cones: Q\&A}
+  \textbf{(?2)} A set $C$ is a convex cone \textbf{iff} $\forall x_{1}, x_{2} \in C, \theta_{1}, \theta_{2} \ge 0$, we have
+  $\theta_{1}x_{1} + \theta_{2}x_{2} \in C$.\\
+  \textbf{(R2)} Assume that $\theta_{1} + \theta_{2} \gneq 0$, we have
+  $
+    \frac{\theta_{1}}{\theta_{1} + \theta_{2}} x_{1}
+    + \frac{\theta_{2}}{\theta_{1} + \theta_{2}} x_{2} \in C
+  $ because $C$ is convex. Then we can multiply this vector by $\theta_{1} + \theta_{2}$ and
+  it will still remain inside $C$ because $C$ is a cone, whence $\theta_{1}x_{1} + \theta_{2}x_{2} \in C.$
+  Note that this looks almost like the definition of a subspace.
+\end{frame}
 
 \end{document}
