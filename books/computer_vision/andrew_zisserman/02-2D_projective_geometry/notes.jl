@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -90,8 +90,8 @@ Indeed, the element
 $\overline{\k} \in \mathbb{P}^2$
 does not correspond to any line in ``\mathbb{R}^2\,.`` (From now on, we will omit the equivalence class symbol for elements in ``\mathbb{P}^2`` and simply use any member to mean its equivalence class.)
 
-We have not defined ``\mathbb{P}^2`` wronly. For the moment, just bare with it. We
-will come to this again soon, to explain why we include ``\k`` in ``\mathbb{P}^2\,.``
+We have not defined ``\mathbb{P}^2`` wrongly. For the moment, just bare with it. We
+will come back to this again soon, to explain why we include ``\k`` in ``\mathbb{P}^2\,.``
 """
 
 # ╔═╡ bd252a86-e221-11eb-264a-3d84f2bb2ae3
