@@ -1,0 +1,419 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <style>
+      .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5 {
+        text-transform: none;
+      }
+      .space-below {
+        padding-bottom: 1em;
+      }
+      .space-above {
+        padding-top: 1em;
+      }
+      pre.inline {
+        display: inline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <section>
+            <h1>Ensemble Learning</h1>
+          </section>
+          <section>
+            <h2>ensemble</h2>
+            <div>
+              <!--<span class="IPA" style="white-space: pre-line">/ˌɑnˈsɑm.bəl/</span>-->
+              <span class="API" title="Prononciation API">\ɑ̃.sɑ̃bl\</span>
+            </div>
+            <ol>
+              <li>set, e.g. $\;\mathbb{R}, \{ 0, 1 \}$</li>
+              <li>together</li>
+            </ol>
+          </section>
+          <!--<section>
+            <blockquote class="space-below">"The Wisdom of Crowds"</blockquote>
+            <p>But which crowd? Otherwise, wouldn't it become</p>
+            <blockquote>"The Stupidity of Crowds?"</blockquote>
+          </section>-->
+        </section>
+        <section>
+          <h2>Part 1</h2>
+        </section>
+        <section>
+          <section>
+            <h2>Terminologies</h2>
+          </section>
+          <section>
+            <h3>Features, Labels, etc.</h3>
+            <p>Example: Iris dataset</p>
+            <img data-src="images/iris_flowers.png">
+          </section>
+          <section>
+            <h3>Conventions</h3>
+            <ul>
+              <li><code>X</code>: data</li>
+              <li><code>y</code>: labels/targets</li>
+              <li>instance/sample: one piece of data</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Iris Example Again</h3>
+            <pre><code data-trim data-noescape>
+In [1]: from sklearn.datasets import load_iris
+
+In [2]: iris = load_iris()
+
+In [3]: iris.target_names
+Out[3]: ["setosa", "versicolor", "virginica"]
+
+In [4]: X, y = iris.data, iris.target
+
+In [5]: X.shape
+Out[5]: (150, 4)
+
+In [6]: n_instances, n_features = X.shape
+
+In [7]: n_instances
+Out[7]: 150
+
+In [8]: n_features
+Out[8]: 4
+
+In [9]: y
+Out[9]: 
+array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+
+In [10]: iris.feature_names
+Out[10]:
+['sepal length (cm)',
+ 'sepal width (cm)',
+ 'petal length (cm)',
+ 'petal width (cm)']
+
+In [11]: X[:3]
+Out[11]: 
+array([[5.1, 3.5, 1.4, 0.2],
+       [4.9, 3. , 1.4, 0.2],
+       [4.7, 3.2, 1.3, 0.2]])
+            </code></pre>
+          </section>
+          <section>
+            <h2>Performance Metrics</h2>
+            <p>There are many different kinds of performance metrics.</p>
+            <p><em>Accuracy, precision, recall</em>, to name a few.</p>
+          </section>
+          <section>
+            <h2>Accuracy</h2>
+            <p>Accuracy is particularly convenient because it is easy to understand and often applicable.</p>
+            <p>
+            $$\text{accuracy} = \frac{\text{\# correctly predicted instances}}{\text{\# instances}}$$
+            </p>
+            <p>For example, it's awkward to use precision or recall when classifying, say, <strong>three</strong> iris flowers.</p>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>Voting</h2>
+          </section>
+          <section>
+            <h2>Better Explained by Examples</h2>
+            <p>See $\;\texttt{04.02.3weak1strong.ipynb}$</p>
+          </section>
+          <section>
+            <h3>A Biased Coin Toss</h3>
+            <p>$51\%$ Head, $49\%$ Tail</p>
+            <p>
+            \[\begin{aligned}
+            P(\text{\# Head} > \text{\# Tail}, \; 1000\;\text{tosses}) &\approx 75\% \\
+            P(\text{\# Head} > \text{\# Tail}, \; 10000\;\text{tosses}) &\approx 97\%
+            \end{aligned}\]
+            </p>
+          </section>
+          <section>
+            <h3>Why Is That?</h3>
+          </section>
+          <section>
+            <h3>Or, Is It Even True?</h3>
+            <p>$\;\texttt{04.05.sum\_Bernoullis.ipynb}$</p>
+          </section>
+          <section>
+            <h3>Remember Back from Our High School?</h3>
+\[\newcommand{\nchoosek}[2]{\begin{pmatrix}#1\\#2\end{pmatrix}}
+\begin{aligned}
+  &\left(x + y\right)^{n} \\
+  &= \nchoosek{n}{0} x^{0} y^{n}
+    + \nchoosek{n}{1} x^{1} y^{n-1}
+    + \cdots
+    + \nchoosek{n}{n} x^{n} y^{0} \\
+  &= \sum_{k=0}^{n} \nchoosek{n}{k} x^{k} y^{n-k} \\
+\end{aligned}\]
+          </section>
+          <section>
+            <h3>In Our Case</h3>
+\[\newcommand{\nchoosek}[2]{\begin{pmatrix}#1\\#2\end{pmatrix}}
+\begin{aligned}
+1 &= \left(p + (1-p)\right)^{n} \\
+  &= \sum_{k=0}^{n} \nchoosek{n}{k} p^{k} (1-p)^{n-k} \\
+\end{aligned}\]
+          </section>
+          <section>
+            <h2>More Precisely</h2>
+            <p>
+\[\newcommand{\nchoosek}[2]{\begin{pmatrix}#1\\#2\end{pmatrix}}
+\begin{aligned}
+P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses}) \\
+= \sum_{k=\lfloor \frac{n}{2} \rfloor + 1}^{n} \nchoosek{n}{k} p^{k} (1-p)^{n-k} \\
+\end{aligned}\]
+            </p>
+            <h2>But This Is Hard to Calculate </h2>
+            <h2>&#128073 &#128072</h2>
+          </section>
+          <section>
+            <h2>Let's Calculate Sth Simpler</h2>
+            <p>When $p = 0.5$, we have</p>
+            <!--<p>because $\begin{pmatrix}n\\k\end{pmatrix} = \begin{pmatrix}n\\n-k\end{pmatrix}$ for all $k$,</p>
+            <p>we have</p>-->
+            <p>
+\[\newcommand{\nchoosek}[2]{\begin{pmatrix}#1\\#2\end{pmatrix}}
+P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses}) \\
+= \begin{cases}
+    \frac{1}{2}          &\text{if $n$ is odd} \\
+    \frac{1-\epsilon}{2} &\text{if $n$ is even}
+\end{cases}
+\]
+where $\;\epsilon = \begin{pmatrix}n \\ \lfloor \frac{n}{2} \rfloor\end{pmatrix} (\frac{1}{2})^{n}\,.$
+            </p>
+          </section>
+          <section>
+            <h2>Having Boosted Our Confidence</h2>
+            <p>Let's go back to the case $p=0.51\;.$</p>
+            <p>
+            At least we kind of see that
+              <ul>
+                <li>$P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses})$ equals <em>the latter half</em> of the binomial sum</li>
+                <li>It is obvious that $$(\text{the latter half}) > (\text{the former half})$$</li>
+                <li>$\lim_{n\to\infty} \epsilon = 0$</li>
+              <ul>
+            </p>
+          </section>
+          <section>
+            <h2>But Still...</h2>
+            <p>I still don't see how this could become $97\%$</p>
+          </section>
+          <section>
+            <h2>Let' Go to</h2>
+            $\;\texttt{04.12.coin\_toss.ipynb}$
+          </section>
+          <section>
+            <h3>Two Flavors: Hard and Soft</h3>
+          </section>
+          <section>
+            <h3>Hard Voting</h3>
+            TODO: Add a table here
+          </section>
+          <section>
+            <h3>Soft Voting</h3>
+            TODO: Add a table here
+          </section>
+          <section>
+            <p>$\;\texttt{04.16.agerons\_example.ipynb}$, i.e. p.192</p>
+            <p>TODO: Add a notebook</p>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>Bagging and Pasting</h2>
+            <p>i.e. sampling w/ or w/o replacement</p>
+            <p>Statisticians call sampling w/ replacement <em>bootstrap</em>.</p>
+          </section>
+          <section>
+            <h3>with Replacement? How?</h3>
+            <p class="space-above">Same sample appears more than once in training set?</p>
+            <p class="space-above">Wouldn't they be overly represented?</p>
+          </section>
+          <section>
+            <h3><pre class="inline">sklearn</pre> Implementation</h3>
+            <blockquote class="space-below">"Yes, just let them appear more than once."</blockquote>
+          </section>
+          <section>
+            <h3>Proof?</h3>
+            <p>The source code in, e.g.
+            <pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"><code>
+~/miniconda3/envs/ensemble_learning/lib/python3.10/site-packages/sklearn/ensemble/_bagging.py
+            </code></pre>
+            if you use Miniconda like me.
+            </p>
+          </section>
+          <section>
+            <pre><code data-ln-start-from="34" data-line-numbers="5">def _generate_indices(random_state, bootstrap, n_population, n_samples):
+    """Draw randomly sampled indices."""
+    # Draw sample indices
+    if bootstrap:
+        indices = random_state.randint(0, n_population, n_samples)
+    else:
+        indices = sample_without_replacement(
+            n_population, n_samples, random_state=random_state
+        )
+
+    return indices
+            </pre></code>
+          </section>
+          <section>
+            <pre><code data-ln-start-from="124" data-line-numbers="15,18"># Draw samples, using sample weights, and then fit
+if support_sample_weight:
+    if sample_weight is None:
+        curr_sample_weight = np.ones((n_samples,))
+    else:
+        curr_sample_weight = sample_weight.copy()
+
+    if bootstrap:
+        sample_counts = np.bincount(indices, minlength=n_samples)
+        curr_sample_weight *= sample_counts
+    else:
+        not_indices_mask = ~indices_to_mask(indices, n_samples)
+        curr_sample_weight[not_indices_mask] = 0
+
+    estimator_fit(X[:, features], y, sample_weight=curr_sample_weight)
+
+else:
+    estimator_fit(X[indices][:, features], y[indices])
+            </pre></code>
+          </section>
+          <section>
+            <h3><pre class="inline">BaggingClassifier</pre> from <pre class="inline">sklearn</pre></h3>
+            <pre><code>class BaggingClassifier(ClassifierMixin, BaseBagging):
+    def __init__(
+        self,
+        base_estimator=None,
+        n_estimators=10,
+        *,
+        max_samples=1.0,
+        max_features=1.0,
+        bootstrap=True,
+        bootstrap_features=False,
+        oob_score=False,
+        warm_start=False,
+        n_jobs=None,
+        random_state=None,
+        verbose=0,
+    ):
+            </pre></code>
+          </section>
+          <section>
+            <h3>Out-of-Bag, aka oob, Instances</h3>
+            <blockquote>"Only about $63\%$ of the training instances are sampled on average"</blockquote>
+            <p>$63\%$? Where does this number come from?</p>
+            <p>See $\;\texttt{05.08.oob.ipynb}$</p>
+            <p>TODO: Add a notebook</p>
+          </section>
+          <section>
+            <h3>Random Subspaces and Random Patches</h3>
+            <p>
+              If you think about it, you might realize that what we did before by sampling
+              instances <em>could be equally applied to features</em>!
+            </p>
+            <p>
+              That is, we could also sample only a subset of the features to train an estimator.
+              And we could also choose to or not to bootstrap such a sampling.
+            </p>
+          </section>
+        </section>
+        <section>
+          <h2>Random Forests</h2>
+        </section>
+        <section>
+          <section>
+            <h2>Boosting</h2>
+          </section>
+          <section>
+            <h3>AdaBoost</h3>
+          </section>
+          <section>
+            <h3>Gradient Boosting</h3>
+          </section>
+          <section>
+            <h4>XGBoost</h4>
+            <a>https://xgboost.readthedocs.io/en/stable/</a>
+          </section>
+          <section>
+            <h4>LightGBM</h4>
+            <a>https://lightgbm.readthedocs.io/en/v3.3.2/</a>
+          </section>
+        </section>
+        <section>
+          <h2>Stacking</h2>
+        </section>
+        <section>
+          <h2>Part 2</h2>
+        </section>
+        <section>
+          <section>
+            <h2>Q&A</h2>
+            <ol>
+              <li>
+                (Slide 5.7) Why there are two "class args"?
+                <pre><code>
+class BaggingClassifier(ClassifierMixin, BaseBagging)
+                </pre></code>
+              </li>
+            </ol>
+            <p>TODO: Add more questions and answers</p>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>References</h2>
+            <ul>
+              <li>
+                Aurélien Géron, <em>Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow</em>
+              </li>
+            </ul>
+            <p>TODO: Add more refs</p>
+          </section>
+        </section>
+        <section>
+          <h2>Thank You!</h2>
+        </section>
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/math/math.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+      });
+    </script>
+  </body>
+</html>
