@@ -203,10 +203,10 @@ P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses}) \\
 P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses}) \\
 = \begin{cases}
     \frac{1}{2}          &\text{if $n$ is odd} \\
-    \frac{1-\epsilon}{2} &\text{if $n$ is even}
+    \frac{1-\varepsilon}{2} &\text{if $n$ is even}
 \end{cases}
 \]
-where $\;\epsilon = \begin{pmatrix}n \\ \lfloor \frac{n}{2} \rfloor\end{pmatrix} (\frac{1}{2})^{n}\,.$
+where $\;\varepsilon = \begin{pmatrix}n \\ \lfloor \frac{n}{2} \rfloor\end{pmatrix} (\frac{1}{2})^{n}\,.$
             </p>
           </section>
           <section>
@@ -217,7 +217,7 @@ where $\;\epsilon = \begin{pmatrix}n \\ \lfloor \frac{n}{2} \rfloor\end{pmatrix}
               <ul>
                 <li>$P(\text{\# Head} > \text{\# Tail}, \; n\;\text{tosses})$ equals <em>the latter half</em> of the binomial sum</li>
                 <li>It is obvious that $$(\text{the latter half}) > (\text{the former half})$$</li>
-                <li>$\lim_{n\to\infty} \epsilon = 0$</li>
+                <li>$\lim_{n\to\infty} \varepsilon = 0$</li>
               <ul>
             </p>
           </section>
@@ -506,19 +506,35 @@ In particular, when $k = m$, we have
         <section>
           <section>
             <h2>Q&A</h2>
-            <ol>
+          </section>
+          <section>
+            <ol start="1">
               <li>
-                (Slide 5.7) Why there are two "class args"?
+                (Slide 5.7) Why are there two "class args"?
                 <pre><code>
 class BaggingClassifier(ClassifierMixin, BaseBagging)
                 </pre></code>
               </li>
+            </ol>
+          </section>
+          <section>
+            <ol start="2">
               <li>
                 (Slide 5.12) Why
 \[
 \lim_{m\to\infty} \left( 1 - \frac{1}{m} \right)^{m}
 \overset{?}{=}
 \frac{1}{\lim_{m\to\infty} \left( 1 + \frac{1}{m} \right)^{m}}
+\]
+              </li>
+            </ol>
+          </section>
+          <section>
+            <ol start="3">
+              <li>
+                (Slide 4.10) Why
+\[
+\lim_{n\to\infty} \varepsilon \overset{?}{=} 0
 \]
               </li>
             </ol>
